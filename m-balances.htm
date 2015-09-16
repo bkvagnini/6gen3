@@ -1,0 +1,298 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+
+<html>
+
+	<head>
+
+		<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+
+		<title>Mobile - ME Money??)</title>
+
+		<script language="JavaScript">
+
+			
+
+			var curdate= new Date();
+
+			//var curbalance = document.form1.curbalance.value;
+
+			function allzero(){
+				document.form1.amtdebbtn.onclick();
+				document.form1.amtdepbtn.onclick();
+				document.form1.totbillsbtn.onclick();
+			}
+			</script>
+
+			<style type="text/css">
+
+				.TotalAmt {font-weight:bold;color:red;}
+
+				</style>
+
+	</head>
+
+	<body onload="javascript:allzero()"> 
+		
+		
+
+		<!-- This is still a bit buggy. It only accepts whole numbers (2 digits or less?) and NOT decimals -->
+
+		<!--  changed parseInt to parseFloat. Problem fixed    -->
+
+		<form name="form1">
+
+		<table>
+
+			<tr>
+
+			  <td height="479"> 
+
+				
+
+				<!--  This is the Overview section   -->
+
+			
+
+			<table border="0" id="overview">
+
+    <tr> 
+
+      <td><div ><strong>Today's Date: </strong></div></td>
+
+      </tr>
+	  <tr>
+	  <td> <span class="totalamt"><script language="JavaScript">document.write(curdate)</script></td>
+    	</tr>
+
+    <tr> 
+
+      <td><div align="right"><strong>Current Balance: <input type="text" id="curbalance" name="curbalance"></div></td>
+
+    
+    </tr>
+
+    <tr> 
+
+      <td><div align="right"><strong>Amount of Debits: </strong></div></td>
+
+      <td>
+
+      	<input type="button" value="=" onclick="document.write(document.form1.amtdebits.value);">		 </td>
+    </tr>
+
+    <tr> 
+
+      <td><div align="right"><strong>Amount of Deposits: 
+
+		</strong></div></td>
+
+      <td>
+
+      	<input type="button" value="=" onclick="document.write(document.form1.amtdeposits.value);"></td>
+    </tr>
+
+
+    <tr> 
+
+      <td><div align="right"><strong>Amount of Bills Owed:</strong></div></td>
+    </tr>
+  </table>  
+			<table width="18%" border="0" id="debits">
+              <tr>
+                <td width="23%"><h4 align="center">&nbsp;</h4></td>
+              </tr>
+              <tr>
+                <td><div align="center"><strong>Debits Amount:</strong></div></td>
+              </tr>
+              <tr>
+                <td><div align="center">
+                    <input name="debamt01" type="text" id="debamt01"  tabindex="301" value="0">
+                </div></td>
+              </tr>
+              <tr>
+                <td><div align="center">
+                    <input name="debamt02" type="text" id="debamt02"  tabindex="302" value="0">
+                </div></td>
+              </tr>
+              <tr>
+                <td><div align="center">
+                    <input name="debamt03" type="text" id="debamt03"  tabindex="303" value="0">
+                </div></td>
+              </tr>
+              <tr>
+                <td><div align="center">
+                    <input name="debamt04" type="text" id="debamt04"  tabindex="304" value="0">
+                </div></td>
+              </tr>
+              <tr>
+                <td><div align="center">
+                    <input name="debamt05" type="text" id="debamt05"  tabindex="305" value="0">
+                </div></td>
+              </tr>
+              <tr>
+                <td><div align="center">
+                    <input name="debamt06" type="text" id="debamt06"  tabindex="306" value="0">
+                </div></td>
+              </tr>
+              <tr>
+                <td ="2"><h4 align="right">Amount of Debits:</h4></td>
+                <td>$
+                  <input type="button" name="amtdebbtn" value="=" onClick="document.form1.amtdebits.value=
+
+parseFloat (document.form1.debamt01.value)+ 
+
+parseFloat (document.form1.debamt02.value)+
+
+parseFloat (document.form1.debamt03.value)+
+
+parseFloat (document.form1.debamt04.value)+
+
+parseFloat (document.form1.debamt05.value)+
+
+parseFloat (document.form1.debamt06.value)">
+                    <input type="text" size="10" name="amtdebits" id="amtdebits">
+                </td>
+              </tr>
+  </td>
+  
+  </tr>
+  
+            </table>
+			<p>&nbsp;</p></td>
+
+
+  </tr>
+  </table>
+
+		<table>
+    <!--  This is the Deposits section   -->
+    <tr>
+      <td><div align="center"><strong>Deposits Amount:</strong></div></td>
+    </tr>
+    <tr>
+      <td><div align="center">
+          <input name="depamt01" type="text" id="depamt01"  tabindex="202" value="0">
+      </div></td>
+      <td>&nbsp;</td>
+    </tr>
+    <tr>
+      <td><div align="center">
+          <input name="depamt02" type="text" id="depamt02"  tabindex="205" value="0">
+      </div></td>
+      <td>&nbsp;</td>
+    </tr>
+    <tr>
+      <td><div align="center">
+          <input name="depamt03" type="text" id="depamt03"  tabindex="208" value="0">
+      </div></td>
+      <td>&nbsp;</td>
+    </tr>
+    <tr>
+      <td ="2"><h4 align="right">Amount of Deposits:</h4></td>
+      <td>$
+        <input type="button" name="amtdepbtn" value="=" onClick="document.form1.amtdeposits.value=
+
+parseFloat (document.form1.depamt01.value)+ 
+
+parseFloat (document.form1.depamt02.value)+
+
+parseFloat (document.form1.depamt03.value)">
+          <input type="text" size="10" name="amtdeposits" id="amtdeposits">      </td>
+    </tr>
+  </table>
+  <!--  This is the Debits section   -->
+	    <br>
+	    <!--  This is the Total Bills section   -->
+<table width="34%" height="389" border="0" id="totbills">
+
+    <tr> 
+
+      <td colspan="4"><h4 align="center">&nbsp;</h4></td>
+    </tr>
+
+    <tr> 
+
+
+
+      <td width="25%"><div align="center"><strong>Bills Amount:</strong></div></td>
+
+  
+    </tr>
+
+ 
+    <tr>
+      <td><div align="center">
+          <input name="billamt01" type="text" id="billamt01"  tabindex="401" value="0">
+      </div></td>
+      
+    </tr>
+    <tr>
+      <td><div align="center">
+          <input name="billamt02" type="text" id="billamt02"  tabindex="402" value="0">
+      </div></td>
+      
+    </tr>
+    <tr>
+      <td><div align="center">
+          <input name="billamt03" type="text" id="billamt03"  tabindex="403" value="0">
+      </div></td>
+      
+    </tr>
+	    <tr>
+      <td><div align="center">
+          <input name="billamt04" type="text" id="billamt04"  tabindex="404" value="0">
+      </div></td>
+      
+    </tr>
+
+	
+    <tr>
+      <td ="2"><h4 align="right">Amount of Bills:</h4></td>
+      <td>$
+        <input type="button" name="amtbillsbtn" value="=" onClick="document.form1.amtbills.value=
+
+parseFloat (document.form1.billamt01.value)+ 
+
+parseFloat (document.form1.billamt02.value)+
+
+parseFloat (document.form1.billamt03.value)+
+
+parseFloat (document.form1.billamt04.value)">
+          <input name="amtbills" type="text" id="amtbills" size="10">      </td>
+    </tr>
+
+
+
+	  </td>
+    <td height="31"></tr>
+	<td><div align="right"><strong> 
+
+       <tr>   
+         <p><strong>Me MONEY!!</strong><br>
+           (must click on Bills Amt
+           (below)  <br /> and Deposits Amt (above) first ) </p>
+         <span class="totalamt"><input type="button" value="=" onclick="document.form1.memoney.value=
+
+(parseFloat (document.form1.curbalance.value))+ (parseFloat(document.form1.amtdeposits.value))-(parseFloat(document.form1.amtdebits.value))-(parseFloat(document.form1.amtbills.value))">
+
+		<input type="text" size="10" name="memoney" id="memoney">
+
+		
+
+	<!-- MeMoney balance doesn't work quite right because it thinks current balance is half a mil, not 500 dollars --> 	
+
+		<!--  fixed...Needed a parseFloat on EVERY flippin' variable in the calculation, NOT just the curbalance   -->
+
+	  </td>
+
+     
+	</tr>
+  </table>
+
+	    <p>&nbsp;</p>
+		</form>	
+
+	</body>
+
+</html>
+
