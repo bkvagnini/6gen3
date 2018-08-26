@@ -1,0 +1,22 @@
+/* CSS sheet for 6gen3.com */
+
+#p {
+font-family:"Times New Roman";
+font-size:20px;
+}
+li {
+
+}
+
+.designedby {
+	font-weight: bold;
+}
+
+.books {
+    width: 50%;
+    float: left;
+    text-align: center;
+}
+img {
+max-width: 100%;
+}

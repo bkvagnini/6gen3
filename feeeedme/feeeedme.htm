@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+
+<html>
+
+	<head>
+ <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="Brian K. Vagnini">
+    <link rel="shortcut icon" href="images/favicon.png">
+
+    <title>Feeeed Me</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+	<link href="css/6gen3.css" rel="stylesheet">
+
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+      <script src="js/html5shiv.js"></script>
+      <script src="js/respond.min.js"></script>
+    <![endif]-->
+
+    <!-- Custom styles for this template -->
+	<link href="css/feeeedme.css" rel="stylesheet">
+</head>
+	<body> 
+		<!--     -->
+		<!-- Load meals.json into memory    -->
+		<script> 
+//This currently doesn't work - 082618
+var main_dish = JSON.parse(main_dish);
+
+   </script>
+		<!--  Form with a button that says feeeed me   -->
+		<form name="form1">
+<input type="button" value="Feeeed Me!">
+
+		</form>	
+		<script>var btn = document.querySelector('input');
+var txt = document.querySelector('p');
+
+btn.addEventListener('click', updateBtn);
+
+function updateBtn() {
+  if (btn.value === 'Feeeed Me!') {
+    btn.value = 'Here...Try this';
+
+  } else {
+    btn.value = 'Feeeed Me!';
+
+  }
+}</script>
+		<!-- Randomizer    -->
+		<!-- Button returns a random value for Meats    -->	
+		<!-- Button returns a random value for Vegetables    -->		
+		<!-- Button returns a random value for Starch (Rice, Noodels etc.) -->
+		<!-- Button returns a random value for Sauce -->
+		
+		
+		
+<!-- FOOTER -->
+      <footer>
+        <p>&copy; 2018 6gen3 </p>
+      </footer>
+    </div><!-- /.container -->
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="js/jquery.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script src="js/holder.js"></script>
+    <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
+       <!-- <script src="../../assets/js/ie10-viewport-bug-workaround.js"></script>  -->
+  </body>
+
+</html>
+
