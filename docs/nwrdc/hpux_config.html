@@ -1,0 +1,2213 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title> HP-UX Configuration</title>
+<link rel=stylesheet href="howto.css" type="text/css" media=screen>
+<!-- Yes. I know that you are supposed to properly indent all code. However, it really screws up the pre tags that I had to use 
+to show the expected output. If YOU want to mess around for a few weeks trying to get the formatting exactly right on the output, 
+then have at it, monkey boy; otherwise, cut me some slack...   -->
+</head>
+<body>
+<h1> HP-UX Configuration</h1>
+<a name="toc"></a>
+<p>TOC</p>
+<ul>
+<li><a href="#user">User Accounts</a></li>
+<li><a href="#network">Network Configuration</a></li>
+<li><a href="#snmp">SNMP</a></li>
+<li><a href="#ntp">Network Time Protocol</a></li>
+<li><a href="#smb">samba</a></li>
+<li><a href="#apache">Apache</a></li>
+<li><a href="#ftp">FTP</a></li>
+<li><a href="#fw">firewall (IPF)</a></li>
+<li><a href="#cron">cron jobs</a></li>
+<li><a href="#motd">MOTD</a></li>
+<li><a href="#backup">Backup Client SW Installation</a></li>
+<li><a href="#sendmail">Sendmail configuration</a></li>
+<li><a href="#harden">Server Hardening</a></li>
+<li><a href="#swinstall">software installation/patching</a></li>
+<li><a href="#disk">disk info</a></li>
+	<ul>
+	<li><a href="#df">df commands</a></li>
+	<li><a href="#ioscan">ioscan</a></li>
+	<li><a href="#scsimgr">scsimgr</a></li>
+	<li><a href="#pvdisplay">pvdisplay</a></li>
+	<li><a href="#lvdisplay">lvdisplay</a></li>
+	<li><a href="#vgdisplay">vgdisplay</a></li>
+	</ul>
+<li><a href="#ignite">Ignite_IMS info</a></li>
+<li><a href="#x11">XServer / X11</a></li>
+<li><a href="#misc">misc. info</a></li>
+</ul>
+<p><em>created 050615 bkv updated 063016 bkv</em></p>
+
+<!-- User Accounts -->
+<a name="user"></a>
+<h2> User Accounts</h2>
+<h3>New HP-UX user with home folder</h3>
+<p><code>sudo /usr/sbin/useradd -m -d/home/marshals marshals</code></p>
+<p> the -m makes the home folder, if it doesn't already exist (it doesn't) and the <br>
+-d supplies the path to the home folder. This allows the creation of both the user acct and the home folder in one fell swoop.</p>
+<p> if you want to do the home folder the hard way...</p>
+<p><code>sudo mkdir /home/marshals</code></p>
+<p><code>sudo chown marshals:users /home/marshals</code></p>
+<p><code>sudo chmod 755 /home/marshals</code></p>
+<br>
+<p><code>sudo passwd marshals</code></p>
+<p>NOTE: HP-UX does NOT like the @ symbol anywhere in the password. 
+<br>If you put it in there, it may come back and say that the P@ssword is too short (meaning only one character).</p>
+<p> Do they need a samba account as well? If so, <a href="#smb">go to samba section</a></p>
+
+<h4>Creating a Service account</h4>
+
+<p>Create the user account/homefolders as normal</p>
+
+<p>Setting password to high expiration date</p>
+<p><a href="http://community.hpe.com/t5/Security/How-to-set-Password-expiration-date-on-HP-UX/td-p/4283282">http://community.hpe.com/t5/Security/How-to-set-Password-expiration-date-on-HP-UX/td-p/4283282</a></p>
+<p>also <a href="http://nixdoc.net/man-pages/HP-UX/modprpw.1m.html">http://nixdoc.net/man-pages/HP-UX/modprpw.1m.html</a></p>
+
+<code>sudo /usr/lbin/modprpw -k -m exptm=9999 opconftp</code>
+<p>(Sets  :u_exp#863913600 (which is 9999 * 86400; the time value for expiration is days- 86400 is # of seconds in a 24 hr day))</p>
+<p>The path for this is /tcb/files/auth/o then vi opconftp - MUST be root to see these folders</p>
+
+<p>Disabling remote logins (via ssh)</p>
+<p><a href="https://www.experts-exchange.com/questions/23987631/Disabling-remote-login-for-generic-accounts-in-HP-UX-11i-31.html">https://www.experts-exchange.com/questions/23987631/Disabling-remote-login-for-generic-accounts-in-HP-UX-11i-31.html</a></p>
+<code>sudo vi /etc/opt/ssh/sshd_config</code>
+<p> add DenyUsers USERNAME</p>
+
+<p> another way</p>
+<h4>for disabling password aging (to treat an acct as a service acct)</h4>
+<p><a href="http://community.hpe.com/t5/System-Administration/how-to-disable-hpux-password-aging-policy-per-user/td-p/4479674">http://community.hpe.com/t5/System-Administration/how-to-disable-hpux-password-aging-policy-per-user/td-p/4479674</a></p>
+
+<p>create acct called rsyncuser</p>
+
+<code>/usr/lbin/modprpw -l -m mintm=0,exptm=0 rsyncuser</code><br>
+
+<h4> Adding to sudoers</h4>
+<p>The task:<br>
+Please create a sudo for the www user account on the IMSDR UNIX server.  David Charles (Charlesd) will need to be added to that group.</p>
+
+<p>sudo /usr/sbin/visudo</p>
+<p>Under ## User alias specification</p>
+add:<br>
+<pre>
+User_Alias      WWW = charlesd 
+</pre>
+<p>Under ## User privilege specification</p>
+add:<br>
+<pre>
+WWW ALL=(www) ALL,!/bin/su, !/bin/*sh
+</pre>
+<p> When copying files for DOR, remember that it often involves changing permissions and ownership as well.</p>
+<h4> Changing Permissions</h4>
+<p>sudo chmod 555 IMSUPLOAD.XML </p>
+<pre>
+Before:
+-r-x------   1 root       sys          12305 Jun  2 14:18 IMSUPLOAD.XML
+-r-xr-xr-x   1 cssadm     css          10165 Jan 13  2010 IMSUPLOAD.XML.0113
+
+After:
+-r-xr-xr-x   1 root       sys          12305 Jun  2 14:18 IMSUPLOAD.XML
+-r-xr-xr-x   1 cssadm     css          10165 Jan 13  2010 IMSUPLOAD.XML.0113
+
+</pre>
+<p>There's more on User accounts here:</p>
+<p><a href="file:///W:/Projects/how-to.html#user">file:///W:/Projects/how-to.html#user</a></p>
+<h4> Changing Group ownership</h4>
+<p>sudo chown cssadm:css IMSUPLOAD.XML</p>
+<p> This changes the IMSUPLOAD.XML file from Root being the owner and sys being the group (the defaults when I copied it into the directory), to <br>
+cssadm being the owner and css being the group.</p>
+<pre>
+Before:
+-r-xr-xr-x   1 root       sys          12305 Jun  2 14:18 IMSUPLOAD.XML
+-r-xr-xr-x   1 cssadm     css          10165 Jan 13  2010 IMSUPLOAD.XML.0113
+
+After:
+-r-xr-xr-x   1 cssadm     css          12305 Jun  2 14:18 IMSUPLOAD.XML
+-r-xr-xr-x   1 cssadm     css          10165 Jan 13  2010 IMSUPLOAD.XML.0113
+</pre>
+
+<h4>TCSH profiles</h4>
+<p> This allow you to set certain environment variables. It is located at /etc/csh.login</p>
+<p> Per <a href="http://www.cyberciti.biz/faq/set-environment-variable-unix/"> http://www.cyberciti.biz/faq/set-environment-variable-unix/</a></p>
+<p>Resources: <a href="http://hpux.connect.org.uk/hppd/hpux/Shells/tcsh-6.14.06/tcsh-6.14.06-ia64-11.31.depot.tar"> (to get the tcsh shell)</a></p>
+
+<h4>To install tcsh shell</h4>
+ <code>sudo /usr/sbin/swinstall -s /home/vagninib/tcsh/libiconv-1.14-ia64-11.31.depot<br>
+sudo /usr/sbin/swinstall -s /home/vagninib/tcsh/make-4.1-ia64-11.31.depot<br>
+sudo /usr/sbin/swinstall -s /home/vagninib/tcsh/gettext-0.19.7-ia64-11.31.depot<br> 
+sudo /usr/sbin/swinstall -s /home/vagninib/tcsh/termcap-1.3.1-ia64-11.31.depot<br>
+sudo /usr/sbin/swinstall -s /home/vagninib/tcsh/tcsh-6.19.00-ia64-11.31.depot</code>
+<p>The path (in /etc/passwd) to the tcsh shell is /usr/local/bin/tcsh</p>
+
+<!-- commented out 030816 because the proper instructions for installing tcsh are above- kept below for how to troubleshoot a missing library 
+<h4>To use the tcsh shell</h4> 
+<code>tcsh</code>
+<pre>
+/usr/lib/hpux32/dld.so: Unable to find library 'libtermcap.so'.
+Killed
+</pre>
+(per <a href="http://community.hpe.com/t5/System-Administration/HP-UX-11i-tcsh-installation-Execute-permission-denied/td-p/3053751">tcsh issues</a>
+
+<p>for "/usr/lib/hpux32/dld.so: Unable to find library 'libtermcap.so'."</p>
+<a href="https://administratosphere.wordpress.com/2007/10/19/shared-libraries-hp-ux/">Shared Library missing</a>
+
+<h4>To add the missing library<h4>
+<code>sudo /usr/sbin/swinstall -s /home/vagninib/tcsh/termcap-1.3.1-ia64-11.31.depot</code>
+
+-->
+<h4>To use the tcsh shell</h4>
+ <code>tcsh</code>
+ <pre>
+imsdevx 9:
+(type "exit" to exit the shell)
+</pre>
+<h4>tcsh profile setup</h4>
+<p><a href="http://www.ibm.com/developerworks/aix/library/au-tcsh/index.html">http://www.ibm.com/developerworks/aix/library/au-tcsh/index.html</a></p>
+
+<p>Need to have a .tcsh file in /home/USERNAME</p>
+<p> See garnettr .tcsh file contents in IMSDev as an example</p>
+
+<h4> Making the users default shell be tcsh</h4>
+<code>sudo usermod -s /usr/local/bin/tcsh oracle</code><br>
+<p>(per <a href="http://nixdoc.net/man-pages/HP-UX/man1/usermod.1m.html)">http://nixdoc.net/man-pages/HP-UX/man1/usermod.1m.html)</a></p>
+
+<p> To confirm the change</p>
+<code>grep oracle /etc/passwd</code><br>
+<pre>
+oracle:*:108:104:,,,:/home/oracle:/usr/local/bin/tcsh
+</pre>
+
+<a href="#toc">Back to TOC</a>
+<!--Network config -->
+<a name="network"></a>
+<h4> Network Configuration</h4>
+<p> Files to modify:</p>
+<ul>
+  <li>/etc/hosts    (Hosts configuration file (resolve hosts and IPs))</li>
+<li>sudo vi /etc/rc.config.d/netconf    (IP address, routing address and hostname stored in this file)</li>
+ <li>sudo /etc/init.d/net start    (Use to start, stop network service (NOT RIGHT))</li>
+ </ul>
+
+<code>$ sudo /usr/sbin/lanscan</code>
+<pre>
+Hardware Station        Crd Hdw   Net-Interface  NM  MAC       HP-DLPI DLPI
+Path     Address        In# State NamePPA        ID  Type      Support Mjr#
+0/0/0/3/0/0/0 0x0017A4776010 0   UP    lan0 snap0     1   ETHER     Yes     119  (Nic 1) (Used for vswitch1 and for management NIC for Host)
+0/0/0/3/0/0/1 0x0017A4776012 1   UP    lan1 snap1     2   ETHER     Yes     119  (Nic 2) (USE this for BaaS for Host and for vswitch2 for Baas Nic for Guests)
+0/0/0/3/0/0/4 0x0017A4776018 2   UP    lan2 snap2     3   ETHER     Yes     119  
+0/0/0/3/0/0/5 0x0017A477601A 3   UP    lan3 snap3     4   ETHER     Yes     119
+0/0/0/4/0/0/0 0x0017A4776014 4   UP    lan4 snap4     5   ETHER     Yes     119  (Nic 3)
+0/0/0/4/0/0/1 0x0017A4776016 5   UP    lan5 snap5     6   ETHER     Yes     119  (Nic 4)
+LinkAgg0 0x000000000000 900 DOWN  lan900 snap900 8   ETHER     Yes     119
+LinkAgg1 0x000000000000 901 DOWN  lan901 snap901 9   ETHER     Yes     119
+LinkAgg2 0x000000000000 902 DOWN  lan902 snap902 10  ETHER     Yes     119
+LinkAgg3 0x000000000000 903 DOWN  lan903 snap903 11  ETHER     Yes     119
+LinkAgg4 0x000000000000 904 DOWN  lan904 snap904 12  ETHER     Yes     119
+</pre>
+
+<code>$ sudo /usr/sbin/lanadmin</code>  (done on HOST)
+
+<pre>
+          LOCAL AREA NETWORK ONLINE ADMINISTRATION, Version 1.0
+                       Fri, Jan 29,2016  12:06:35
+
+               Copyright 1994 Hewlett Packard Company.
+                       All rights are reserved.
+
+Test Selection mode.
+
+        lan      = LAN Interface Administration
+        menu     = Display this menu
+        quit     = Terminate the Administration
+        terse    = Do not display command menu
+        verbose  = Display command menu
+
+Enter command: display
+
+                      LAN INTERFACE STATUS DISPLAY
+                       Fri, Jan 29,2016  12:07:26
+
+PPA Number                      = 0
+Description                     = lan0 HP 10GBase-KR Release IOCXGBE_B.11.31.1503
+Type (value)                    = ethernet-csmacd(6)
+MTU Size                        = 1500
+Speed                           = 10000000000
+Station Address                 = 0x0017a4776010
+Administration Status (value)   = up(1)
+Operation Status (value)        = up(1)
+Last Change                     = 148
+Inbound Octets                  = 3952998376
+Inbound Unicast Packets         = 13372273
+Inbound Non-Unicast Packets     = 1580155
+Inbound Discards                = 0
+Inbound Errors                  = 0
+Inbound Unknown Protocols       = 99
+Outbound Octets                 = 654107600
+Outbound Unicast Packets        = 6890774
+Outbound Non-Unicast Packets    = 1309
+Outbound Discards               = 0
+Outbound Errors                 = 0
+Outbound Queue Length           = 3
+Specific                        = 655367
+</pre>
+<p>can also try this  (per <a href="http://www.cyberciti.biz/tips/hp-ux-networking-related-tools-and-commands.html">http://www.cyberciti.biz/tips/hp-ux-networking-related-tools-and-commands.html</a>)
+<br>
+<code>sudo /usr/sbin/ifconfig lan1 ( to display stats for lan1 interface)</code>
+<br>
+<code>sudo /usr/sbin/ifconfig lan1 10.201.9.201 netmask 255.255.254.0 up</code>
+
+<code>$ /usr/bin/netstat -in</code>
+<pre>
+Name      Mtu  Network         Address         Ipkts              Ierrs Opkts              Oerrs Coll
+lo0      32808 127.0.0.0       127.0.0.1       208                0     208                0     0   
+lan1      1500 10.201.8.0      10.201.9.201    0                  0     0                  0     0   
+lan0      1500 192.168.162.0   192.168.162.11  718                0     371                0     0   
+</pre>
+
+<p>(For adding a virtual switch to an HPVM Host, go to <a href="hpux_install.html#vm">Virtual Switch</a>)</p>
+<a href="#toc">Back to TOC</a>
+
+<!--SNMP -->
+<a name="snmp"></a>
+<h4> SNMP</h4>
+(per <a href="http://community.hpe.com/t5/System-Administration/How-to-config-SNMP-for-hp-ux-11-31/td-p/5656715">SNMP</a> 
+and <a href="http://community.hpe.com/t5/Workload-Resource-Management/Starting-Stopping-snmp-agents-on-HP-UX-11-0/td-p/2688170)">Stopping SNMP</a>
+<br>
+<code>sudo vi /etc/SnmpAgent.d/snmpd.conf</code>
+<p>Look in the NWRDC password safe underneath DOR > General > SNMP Community Strings for the community strings<p>
+
+<code>sudo /sbin/init.d/SnmpMaster stop</code>
+<br>
+<code>sudo /sbin/init.d/SnmpMaster start</code>
+<br><br>
+<a href="#toc">Back to TOC</a>
+
+<!--NTP -->
+<a name="ntp"></a>
+<h4>Network Time Protocol</h4>
+<p>IP for NTP: 204.89.74.180</p>
+<p>(DOR's NTP Server IP)</p>
+
+<code>sudo vi /etc/ntp.conf</code><p>  (WARNING: LONG file - use G in vi to go to the very bottom of the file)</p>
+<p>add 'disable monitor' to the bottom of the file</p>
+
+<code>sudo /sbin/init.d/xntpd stop</code>
+<br>
+<code>sudo /sbin/init.d/xntpd start</code>
+
+<p>To verify the service is back up (per <a href="http://www.cyberciti.biz/faq/howto-configure-hpux-unix-xntpd-ntp-server/">Verify NTP service</a>)</p>
+<br>
+<code>ntpq -p</code>
+or <br>
+<code>tail -f /var/adm/syslog/syslog.log</code>
+or <br><code>ps -ef | grep xntpd</code>
+<br>
+<br>
+<a href="#toc">Back to TOC</a>
+
+<!--Samba -->
+<a name="smb"></a>
+<h4>Samba User Accounts</h4>
+<p> Changing samba password</p>
+<code>sudo /opt/samba/bin/smbpasswd USERNAME</code>
+<p> results in </p>
+<pre>
+New SMB password:
+Retype new SMB password:
+$ 
+</pre>
+<p>Exporting/importing list of samba users</p>
+
+<p>on IMS: (OLD SERVER)</p>
+<code>sudo /opt/samba/bin/pdbedit &#151;e smbpasswd:/opt/samba/passfile</code>
+<p>This means, using pdbedit, export smbpasswd and put the resulting text file in /opt/samba/passfile</p>
+<pre>
+Importing account for addisona...ok
+Importing account for leightyc...ok
+Importing account for samas...ok
+build_sam_account: smbpasswd database is corrupt!  username gonzalan with uid 140 is not in unix passwd database!
+Importing account for krollc...ok
+Importing account for mitek...ok
+etc...
+</pre>
+<p> Copy /opt/samba/passfile from the old server to the new server.</p>
+
+<p>on IMSx:(NEW SERVER)</p>
+<code>sudo /opt/samba/bin/pdbedit &#151;i smbpasswd:/home/vagninib/passfile</code>
+<p>This means, using pdbedit, import into smbpasswd from the text file in /opt/samba/passfile</p>
+<p>IT IMPORTED A BUNCH OF USERS!!</p>
+<p> To verify:</p>
+<code>sudo /opt/samba/bin/pdbedit &#151;L</code>
+<pre>
+sabatinl:249:Linda Sabatino,,,
+addisona:257:
+pattersg:232:,,,
+mauser:181:,,,
+callowad:116:,,,
+clarkta:265:
+jessupb:142:,,,
+michalsj:226:,,,
+maddoxd:150:,,,
+simpsoci:234:,,,
+ etc...
+</pre>
+
+<p> Additional Resources: <a href="http://h30499.www3.hp.com/t5/System-Administration/Configuring-SAMBA-in-HP-UX-11-11-server/td-p/3987419#.VdzA9Zda1BA" >Configuring SAMBA in HP-UX 11.11 server</a></p> 
+<h4>Stopping and starting Samba Services</h4>
+<p>Normally, you can type in "service samba stop" and that is sufficient. Not in the case of samba services on HP-UX. </p>
+<p> The correct way:</p>
+<p><code>sudo /opt/samba/bin/stopsmb</code></p>
+outputs:
+<pre>smbd & nmbd successfully shut down.</pre>
+<p><code>sudo /opt/samba/bin/startsmb</code></p>
+outputs:
+
+<pre>smbd & nmbd started successfully; process ids: smbd: 2622, nmbd: 2616.</pre>
+<p> To verify:</p>
+<p><code>ps -eaf |grep nmbd</code></p>
+outputs:
+<pre>
+    root  2616     1  0 09:33:23 ?         0:00 /opt/samba/bin/nmbd -D -s /etc/opt/samba/smb.conf
+vagninib  2642  2446  0 09:33:35 pts/1     0:00 grep nmbd
+</pre>
+
+<h3>Samba config</h3>
+(via <a href="http://www.clickbox.in/2013/11/hp-ux-11-31-samba-share-step-by-step/">Samaba step by step</a>  or   <a href="http://www.mcsr.olemiss.edu/bookshelf/articles/Samba.html">Samba</a>
+<p>Need to add the IP to the global config (so that they can see the shares), then add them to the data drive shares hosts allow section (if applicable) so that they can read/write to the shares</p>
+<h4>smb.conf</h4>
+<p><code>sudo vi /etc/opt/samba/smb.conf</code></p>
+outputs: (NOTE: This is not the complete conf file. I cherry picked certain sections to highlight different configuration options)
+<pre>
+[global]
+        workgroup = IMS_GRP
+        server string = Samba %v on ims
+        guest account = cssadm
+        syslog = 0
+        log file = /var/opt/samba/log.%m
+        max log size = 1000
+        os level = 34
+        local master = No
+        admin users = root
+        read only = No
+        create mask = 0764
+        directory mask = 0775
+        hosts allow = 198.56.51., 204.89.122., 192.168.166., 192.168.167., 192.168.165., 204.89.71., 204.89.70., 204.8
+9.73., 204.89.72., 204.89.118., 204.89.116., 204.89.115., 192.168.163.2, 192.168.243., 204.89.86., 204.89.86., 204.89.
+123., 204.89.121., 204.89.67.186, 204.89.67.188, 204.89.67.183, 204.89.88.17, 204.89.67.246, 204.89.124.54, 204.89.124
+.55, 204.89.124.56, 204.89.124.57, 204.89.68.205, 204.89.125.14, 204.89.125.31, 204.89.95., 204.89.64.42, 204.10.14.17
+5, 204.10.14.177, 10.14.157., 10.14.175., 10.14.177., 204.89.110., 10.14.149., 10.14.145., 10.14.147., 10.14.149., 204
+.89.90., 204.89.91., 204.89.111., 10.14.155., 204.89.92., 164.51.27., 204.89.93., 204.89.104., 204.89.108., 204.89.98.
+, 204.89.103., 204.89.109., 204.89.125.25, 204.89.113., 204.89.114., 164.51.96., 164.51.111., 204.89.96., 204.89.84.,
+164.51.140., 204.89.112., 198.56.36., 204.89.100., 164.51.96., 204.89.114., 164.51.108., 204.89.113., 204.89.96., 164.
+51.111., 204.89.84., 164.51.140., 204.89.112., 198.56.39., 10.14.169., 10.14.159., 10.14.167., 10.14.153., 164.51.151.
+, 198.56.49., 164.51.216., 198.56.43., 204.89.92., 164.51.77., 164.51.155., 198.56.40., 204.89.106., 204.89.102., 198.
+56.50., 204.89.101., 164.51.98., 198.56.42., 204.89.90., 201.89.91., 164.51.171., 198.56.49., 204.89.84., 204.89.96.,
+204.89.106., 164.51.218., 198.56.41., 204.89.121., 164.51.3., 198.56.39., 164.51.155., 198.56.41., 164.51.75., 204.89.
+99., 164.51.135., 198.56.48., 198.56.45., 164.51.27., 204.89.94., 164.51.167., 164.51.26.130, 164.51.129., 204.89.105.
+, 192.168.241., 164.51.26., 10.14.139., 10.14.133., 10.14.141.,198.56.44., 204.89.87.51, 205.176.126., 10.14.139.29, 1
+0.14.143.11, 10.14.143.12, 10.14.133.21, 10.14.133.22, 164.51.7.65, 204.89.87.54 
+        preserve case = No
+        short preserve case = No
+        disk quotas = Yes
+        dos filetime resolution = Yes
+
+[homes]
+        comment = Home Directories
+        path = /home
+        browseable = No
+
+[eserv]
+        path = /eserv
+        create mask = 0777
+        directory mask = 0777
+        inherit permissions = Yes
+        hosts allow = 10.14.175.30, 10.14.175.31, 10.14.175.32, 10.14.175.33, 10.14.175.34, 10.14.175.35, 204.89.72.,
+204.89.73., 204.89.71.35, 204.89.71.102, 204.89.118.79, 192.168.166.143, 204.89.67.246, 10.14.155., 10.14.145., 10.14.
+149., 10.14.157., 10.14.133., 10.14.141., 10.14.139.29, 10.14.133.21, 10.14.133.22, 10.14.175.25, 10.14.175.26
+
+[data13]
+        comment = Data 13
+        path = /data13
+        hosts allow = 198.56.51., 10.14.143.11, 204.89.122., 192.168.166., 192.168.167., 192.168.165., 204.89.71., 204
+.89.70., 204.89.73., 204.89.72., 204.89.118., 204.89.116., 204.89.115., 192.168.163.2 (etc)
+</pre>
+<p><code>sudo /opt/samba/bin/testparm</code></p>
+<p> (tool that  very simple test program to check an smbd(8) configuration file) </p>
+<p>can also telnet to the ports in question<br>
+telnet 127.0.0.1 445<br>
+telnet 127.0.0.1 139</p>
+<h4>Copying Samba configuration over from another server</h4>
+<p> on IMS</p>
+<code>/sbin/tar -crvf samba.tar /var/opt/samba/private/*</code> <br>
+<p> This will capture smbpasswd, secrets.tdb and passdb.tdb files. The actual passwords are stored in passdb.tdb, whereas the machine accts are stored in secrets.tdb.<p>
+<p> passdb.tdb stores a hash of the password and smbpasswd (a binary tool) creates a hash into passdb.tdb.</p>
+
+<code>/usr/bin/scp -p -v samba.tar vagninib@192.168.162.10:~/samba.tar </code><br>
+<code>/sbin/tar -crvf smb.tar /etc/opt/samba/smb.conf </code><br>
+<code>/usr/bin/scp -p -v smb.tar vagninib@192.168.162.10:~/smb.tar </code><br>
+
+<p>on IMSx</p>
+<code>/sbin/tar xvf samba.tar</code><br>
+<code>/sbin/tar xvf smb.tar</code><br>
+
+<code>sudo /opt/samba/bin/stopsmb</code><br>
+<pre>smbd & nmbd successfully shut down.</pre>
+<code>sudo /opt/samba/bin/startsmb</code><br>
+<pre>smbd & nmbd started successfully; process ids: smbd: 3741, nmbd: 3735.</pre>
+
+<code> ps -eaf |grep nmbd</code><br>
+<pre>
+    root  3735     1  0 13:18:54 ?         0:00 /opt/samba/bin/nmbd -D -s /etc/opt/samba/smb.conf
+    root  3760  2552  0 13:19:20 pts/0     0:00 grep nmbd
+</pre>
+
+<h4> Samba tools</h4>
+
+<p>Look at tdbsam file</p>
+<p>There is a tdbbackup, tdbdump, tdbrestore and tdbtool</p>
+<p>tdbdump- per https://www.samba.org/samba/docs/man/manpages/tdbdump.8.html , <br>
+tdbdump is a very simple utility that 'dumps' the contents of a TDB (Trivial DataBase) file to standard output in a human-readable format. </p>
+
+<p>tdbbackup - per https://www.samba.org/samba/docs/man/manpages-3/tdbbackup.8.html<br>
+tdbbackup is a tool that may be used to backup samba .tdb files.</p>
+ 
+ <p>Samba .tdb files are stored in various locations, be sure to run backup all .tdb file on
+       the system. Important files includes:</p>
+<ul>
+       <li>    secrets.tdb - usual location is in the /usr/local/samba/private directory, or on some
+	   systems in /etc/samba.</li>
+
+       <li>    passdb.tdb - usual location is in the /usr/local/samba/private directory, or on some
+	   systems in /etc/samba.</li>
+
+      <li>    *.tdb located in the /usr/local/samba/var directory or on some systems in the
+	   /var/cache or /var/lib/samba directories.</li>
+
+<code>$ sudo find / -name "*.tdb"</code><br>
+<pre>
+/var/opt/samba/locks/printing/Office.tdb
+/var/opt/samba/private/secrets.tdb
+/var/opt/samba/private/passdb.tdb
+</pre>
+
+<p>tdbrestore- nothing found</p>
+
+<p>tdbtool-per https://www.samba.org/samba/docs/man/manpages-3/tdbtool.8.html<br>
+tdbtool a tool for displaying and altering the contents of Samba TDB (Trivial DataBase) files.</p>
+
+<code># /opt/samba/bin/tdbtool</code><br>
+<pre> tdb>
+</pre>
+<code>info /var/opt/samba/private/passdb.tdb</code><br>
+<code> open /var/opt/samba/private/passdb.tdb</code><br>
+
+
+<p>Look at <a href="http://community.hpe.com/t5/System-Administration/Configuring-SAMBA-in-HP-UX-11-11-server/td-p/3987419">http://community.hpe.com/t5/System-Administration/Configuring-SAMBA-in-HP-UX-11-11-server/td-p/3987419</a>
+
+<code>sudo vi /etc/rc.config.d/samba   (first variable set to 1).</code> <br>
+
+<p>These were set to 0 - change to 1</p>
+<pre>
+RUN_SAMBA=1
+RUN_WINBIND=1
+</pre>
+
+<p>Added 204.89.120.194 (Wsus server) to the global list (for testing purposes)</p>
+<p>Had to add vagninib to the samba password list via <code>sudo /opt/samba/bin/pdbedit -a vagninib</code> </p>
+
+<p>on IMS:</p>
+<code>sudo /opt/samba/bin/pdbedit &ndash;e smbpasswd:/opt/samba/passfile</code><br>
+<p>This means, using pdbedit, export smbpasswd and put the resulting text file in /opt/samba/passfile</p>
+<pre>
+Importing account for addisona...ok
+Importing account for leightyc...ok
+Importing account for samas...ok
+build_sam_account: smbpasswd database is corrupt!  username gonzalan with uid 140 is not in unix passwd database!
+Importing account for krollc...ok
+Importing account for mitek...ok
+etc...
+</pre>
+
+<p>on IMSx:</p>
+<code>sudo /opt/samba/bin/pdbedit &ndash;i smbpasswd:/home/vagninib/passfile</code><br>
+<p>This means, using pdbedit, import into smbpasswd from the text file in /opt/samba/passfile</p>
+
+<p>IT IMPORTED A BUNCH OF USERS!!</p>
+<p> To confirm:</p>
+<code>sudo /opt/samba/bin/pdbedit -L</code><br>
+
+<pre>sabatinl:249:Linda Sabatino,,,
+addisona:257:
+pattersg:232:,,,
+mauser:181:,,,
+callowad:116:,,,
+clarkta:265:
+jessupb:142:,,,
+michalsj:226:,,,
+maddoxd:150:,,,
+simpsoci:234:,,,
+ etc...
+ </pre>
+
+
+ <h4>Adding AD accounts to IMS Samba (future request from Paul)</h4>
+ <p> NOTE: These steps have NOT been done yet...this is the research that I was looking at in order to do it...</p>
+<p>(per http://community.hpe.com/t5/System-Administration/Configuring-SAMBA-in-HP-UX-11-11-server/td-p/3987419 )</p>
+
+<p>You could also go security = ads and use net join to join the HP system to a Windows domain. That would require admin(root) password to the Windows Domain controller.</p>
+
+
+<p>maybe this: <a href="https://www.howtoforge.com/samba_active_directory">https://www.howtoforge.com/samba_active_directory</a></p>
+
+<p>or this:<a href="https://www.samba.org/samba/docs/using_samba/ch09.html">https://www.samba.org/samba/docs/using_samba/ch09.html</a></p>
+
+<p><a href="https://wiki.samba.org/index.php/Joining_a_Windows_Server_2012_/_2012_R2_DC_to_a_Samba_AD">https://wiki.samba.org/index.php/Joining_a_Windows_Server_2012_/_2012_R2_DC_to_a_Samba_AD</a></p>
+
+<p>This is better: <a href="https://wiki.samba.org/index.php/Setup_Samba_as_an_AD_Domain_Member">https://wiki.samba.org/index.php/Setup_Samba_as_an_AD_Domain_Member</a></p>
+
+<p><a href="https://www.samba.org/samba/docs/using_samba/ch04.html#samba2-CHP-4-SECT-7">https://www.samba.org/samba/docs/using_samba/ch04.html#samba2-CHP-4-SECT-7</a></p>
+ 
+ 
+ <p>There's more on Samba here:</p>
+ <p><a href="file:///W:/Projects/how-to.html#smb">file:///W:/Projects/how-to.html#smb</a></p>
+<a href="#toc">Back to TOC</a>
+
+<!--Apache -->
+<a name="apache"></a>
+<h4>Apache</h4>
+<p>To autostart Apache (change from 0 to 1):</p>
+<p>(per <a href="http://community.hpe.com/t5/System-Administration/to-auto-start-apache-web-server-hpws-apacheconf/td-p/4532464">http://community.hpe.com/t5/System-Administration/to-auto-start-apache-web-server-hpws-apacheconf/td-p/4532464</a> )</p>
+ 
+<code>sudo vi /etc/rc.config.d/hpws22_apacheconf</code><br>
+<pre>
+# Set HPWS22_APACHE_START to 1 to have the Apache web-server started by the
+# init process.
+#changing the value to 0 from 1 for QXCR1001020782
+HPWS22_APACHE_START=1
+</pre>
+<a href="#toc">Back to TOC</a>
+<!--FTP -->
+<a name="ftp"></a>
+<h4>FTP</h4>
+<p>Enabling FTP access (NOT SFTP access, which is enabled by default)</p>
+<p> The issue is below:</p>
+<pre>
+ftp> open 192.168.162.10
+Connected to 192.168.162.10.
+220 imsx FTP server (Revision 9.0 Version wuftpd-2.6.1 Mon Jun 30 09:28:28 GMT 2014) ready.
+Name (192.168.162.10:vagninib): bkvtest
+331 Password required for bkvtest.
+Password:
+530 Login incorrect.
+Login failed.
+Remote system type is UNIX.
+Using binary mode to transfer files.
+ftp> bye
+221 Goodbye.
+</pre>
+<p> The login failed (and it's the correct password and account is unlocked etc.)<br><br>
+To fix it:</p>
+<code> sudo vi /etc/default/security</code>
+<p> change the following line at the bottom</p>
+<pre>
+# Must have a leading zero to denote octal.
+#UMASK=0022
+UMASK=0002
+</pre>
+<p> Then, you will need to modify /etc/shells</p>
+<code>sudo vi /etc/shells</code> 
+<p>paste the following into /etc/shells</p>
+<p>
+/usr/local/bin/tcsh<br>
+/sbin/sh<br>
+/usr/bin/tcsh<br>
+/usr/bin/sh
+</p>
+
+<p> Now it works as expected.</p>
+<pre>
+ftp> open 192.168.162.10
+Connected to 192.168.162.10.
+220 imsx FTP server (Revision 9.0 Version wuftpd-2.6.1 Mon Jun 30 09:28:28 GMT 2014) ready.
+Name (192.168.162.10:vagninib): bkvtest
+331 Password required for bkvtest.
+Password:
+230 User bkvtest logged in.
+Remote system type is UNIX.
+Using binary mode to transfer files.
+</pre>
+<p> The user is capable of trraversing directories, although it drops them into their home folder by default.</p>
+
+<a href="#toc">Back to TOC</a>
+
+<!--Firewall (IPF) -->
+<a name="fw"></a>
+<h4>IPF Firewall</h4>
+<p>per <a href="http://h30499.www3.hp.com/t5/System-Administration/How-disable-ipfilter-on-hp-ux-11-31/td-p/4757124#.VSvt0JPGqXc">http://h30499.www3.hp.com/t5/System-Administration/How-disable-ipfilter-on-hp-ux-11-31/td-p/4757124#.VSvt0JPGqXc</a>
+<br>Adding to JRF, the exact file on HPUX 11.31 on any environment would be <strong>/etc/rc.config.d/ipfconf..... </strong>
+You will see one control variable called as IPF_START, setting it to 0 would mean disabling it. 
+Most probably you will see 1 on that field from the output you have shown. The startup script looks like 
+/sbin/init.d/ipfboot which would check the file /etc/rc.config.d/ipfconf at the time of boot which is what 
+enables or disables your IP Filter service!. </p>
+<p> Sample IPF conf file</p>
+<pre>
+$ more ipfconf
+#
+# Directory where IP Filter configuration files are kept
+#
+IPF_CONFDIR=/etc/opt/ipf
+#
+# Packet filtering configuration file
+#
+IPF_CONF=${IPF_CONFDIR}/ipf.conf
+#
+# Packet filtering configuration file for IPv6
+#
+IPF6_CONF=${IPF_CONFDIR}/ipf6.conf
+#
+# Network address translation configuration file
+#
+IPNAT_CONF=${IPF_CONFDIR}/ipnat.conf
+#
+# Load the ipfilter module ?
+# 1 = Start, 0 = Do not start
+#
+IPF_START=0
+</pre>
+<a href="#toc">Back to TOC</a>
+
+<!--Cron Jobs -->
+<a name="cron"></a>
+<h2>Cron</h2>
+<h3>Turn Cron on or off</h3>
+<p>$ cat /etc/rc.config.d/cron</p>
+<p>outputs</p>
+<pre>
+#!/sbin/sh
+# @(#)B.11.31_LR        
+# Cron configuration.  See cron(1m)
+#
+# CRON:         Set to 1 to start cron daemon
+#
+CRON=1
+$ 
+</pre>
+<p>Cron jobs are at </p>
+<pre>
+$ cd /var/spool/cron/crontabs
+$ ls -a
+.       ..      oracle  root
+</pre>
+<p>Since our cron job is called root, we want to see what it contains</p>
+<p>sudo cat root (on IMSDR)</p>
+<pre>
+
+# Entry for monitoring status of the EMSHAProvider
+5,20,35,50   *    *    *    *   /etc/opt/resmon/lbin/mon_EMSHAProvider_state.sh
+# 0 22 * * 1-6 /backups/scripts/NIGHTLY_IMS_RSYNC.sh >> /backups/scripts/Nightly_IMS_Rsync.log 2>&1
+# 0 21 * * 6 /backups/scripts/WEEKLY_IMS_RSYNC.sh >> /backups/scripts/Weekly_IMS_Rsync.log 2>&1
+# 0 * * * * /backups/scripts/NIGHTLY_IMS_Security_RSYNC.sh >> /backups/scripts/Nightly_IMS_Security_Rsync.log 2>&1
+</pre>
+<p>We THINK the spaces are important in the comments, simply because the initial comment had a space...</p>
+
+<h4>Adding and running a cron job</h4>
+<p> per <a href="https://configureinstantly.wordpress.com/2011/07/24/using-crontab/">https://configureinstantly.wordpress.com/2011/07/24/using-crontab/</a></p>
+<p>As long as there is nothing in /etc/cron.deny, ANY user can add a cron job to the system (that will run under their acct, with their permissions)</p>
+<p>Add your cron job via </p>
+<code>crontab -e </code>
+<p> (it will open vi to edit a file...ESC + : + w to write, ESC + : + q to quit)</p>
+
+<p>EX: This will run as the oracle user every 5 minutes</p>
+<p>5 * * * * /home/oracle/scripts/sh/exp_vpi_db.sh</p>
+
+<p>Make your script (exp_vpi_db.sh) executable, else cron won't be able to run it (even as you)</p>
+
+
+
+<p>Cron Jobs syntax</p>
+(per http://community.hpe.com/t5/System-Administration/how-to-configure-crontab-in-HP-UX/td-p/4382133 )
+
+<pre>
+Let's take a look at how this format fits into the syntax of a crontab entry:
+_________________________ 1. Minute - Minutes after the hour (0-59)
+|
+| ______________________ 2. Hour - 24-hour format (0-23).
+| |
+| | ___________________ 3. Day - Day of the month (1-31)
+| | |
+| | | ________________ 4. Month - Month of the year (1-12)
+| | | |
+| | | | ______________5. Weekday - Day of the week. (0-6, where 0 indicates Sunday)
+| | | | |
+30 0,12 * * * /some/script/or/command
+</pre>
+<h4>start and stop cron:</h4>
+
+<code>sudo /sbin/init.d/cron stop</code> <br>
+<code>sudo /sbin/init.d/cron start</code>
+
+<p>cron permission files location :</p>
+
+<p>/var/adm/cron folder</p>
+
+<p>users cron file location:</p>
+<p>/var/spool/cron/crontabs</p>
+
+<p>to edit cron jobs:</p>
+<code>sudo crontab -e root</code><br>
+<pre>
+examples:
+* * * * 1-5 /usr/bin/ims/cptCopy.sh #
+means run /usr/bin/ims/cptCopy.sh # every Mon- Fri
+
+3 0 * * 1 /backups/backupScripts/capturecleanup.sh
+means run /backups/backupScripts/capturecleanup.sh at 12:03 am on Monday
+
+5,20,35,50   *    *    *    *    /opt/raidsaprovider/bin/restart_raidsaprovider.sh
+means run /opt/raidsaprovider/bin/restart_raidsaprovider.sh at the 5 minute, 20 minute, 35 minute and 50 minute mark every hour of every day
+</pre>
+<p> root cron job on IMS</p>
+<pre>
+# Entry for monitoring status of the EMSHAProvider
+5,20,35,50   *    *    *    *   /etc/opt/resmon/lbin/mon_EMSHAProvider_state.sh
+* * * * 1-5 /usr/bin/ims/cptCopy.sh #
+* * * * 1-5 /usr/bin/ims/cptCopy_qmimscor.sh #
+3 0 * * 1 /backups/backupScripts/capturecleanup.sh
+#0 19 * * 1-6 /backups/scripts/production/IMS_BACKUP_RSYNC.sh >> /backups/scripts/production/backuplog.txt
+#0 1 * * 6 /backups/scripts/production/IMS_BACKUP_WEEKLY_RSYNC.sh >> /backups/scripts/production/backuplog_weekly.txt
+#0 19 * * 1-5 /backups/scripts/production/IMS_BACKUP_SYSTEM.sh >> /backups/scripts/production/backuplog_system.txt
+#0 1 * * 6 /backups/scripts/production/IMS_BACKUP_SYSTEM_WEEKLY.sh >> /backups/scripts/production/backuplog_system.txt
+0 1 * * 1-5 /home/oracle/backup/runoraclebackup.sh >> /home/oracle/backup/runoraclebackup_log.txt
+#0 1 * * 1-5 /usr/lbin/modprpw -k root
+35 5 * * 1-5 /data5/imsdev/src/samas/scripts/samas_run.sh
+#30,59 * * * * /home/gonzalan/performance_monitor.sh >> /backups/performance_monitor.log 2>&1
+0 0 1 2,4,6,8,12 * /usr/local/scripts/rotate_wtmps.sh >> /usr/local/scripts/rotate_wtmps.log 2>&1
+#35 18 * * * /usr/local/scripts/ignite_backup.sh >> /usr/local/scripts/ignitebackup.log 2>&1
+5,20,35,50   *    *    *    *    /opt/raidsaprovider/bin/restart_raidsaprovider.sh
+5,20,35,50   *    *    *    *    /opt/sas/provider/bin/restart_sasprovider.sh
+5,20,35,50   *    *    *    *    /opt/fcprovider/bin/restart_fcprovider.sh
+5,20,35,50   *    *    *    *    /opt/iotreeip/lib/restart_iotreeip.sh
+5,20,35,50   *    *    *    *    /opt/lanprovider/lib/restart_lanp.sh
+5,20,35,50   *    *    *    *    /opt/dasprovider/bin/restart_dasprovider.sh
+# Entry for vacuuming the CER DB
+#30,59 * * * * /home/gonzalan/kmem_monitor.sh >> /backups/kmem_monitor.log 2>&1
+5   1    *    *    *    /opt/psb/vacuum
+5,20,35,50   *    *    *    *    /opt/psb/bin/restart_logserv.sh
+5,20,35,50   *    *    *    *    /opt/sfm/bin/restart_sfm.sh
+</pre>
+<p> root cron job on IMSDev</p>
+<pre>
+# Entry for monitoring status of the EMSHAProvider
+5,20,35,50   *    *    *    *   /etc/opt/resmon/lbin/mon_EMSHAProvider_state.sh
+5,20,35,50   *    *    *    *    /opt/psb/bin/restart_logserv.sh
+# Entry for vacuuming the EMT CER DB
+5   1    *    *    *    /opt/sfm/vacuum
+5,20,35,50   *    *    *    *    /opt/sfm/bin/restart_sfm.sh
+#0 1 * * 1-5 /backups/scripts/IMSDEV_BACKUP_NIGHTLY_RSYNC.sh >> /backups/scripts
+/backuplog.txt
+#0 1 * * 6 /backups/scripts/IMSDEV_BACKUP_WEEKLY_RSYNC.sh >> /backups/scripts/ba
+ckuplog.txt
+0 2 * * 6 /usr/local/scripts/ignite_backup.sh >> /usr/local/scripts/ignitebackup
+.log 2>&1
+0 22 * * 1-6 /home/oracle/backup/runoraclebackup.sh
+#* * * * 1-5 /home/gonzalan/cptCopy_qmimscor.sh
+</pre>
+<h3>Stop and restart the cron services after making a change</h3>
+<pre>
+$ sudo /sbin/init.d/cron stop
+cron stopped
+
+$ sudo /sbin/init.d/cron start
+cron started
+</pre>
+
+<h3>Run sync to allow the unix system to reread configuration files</h3>
+<p>$ sudo sync</p>
+
+<a href="#toc">Back to TOC</a>
+<!--MOTD -->
+<a name="motd"></a>
+<h3>MOTD</h3>
+<p>copy the /etc/issue file from IMSDevx (contains the legalese about signing in yada yada yada) and overwrite the existing /etc/issue</p>
+<code>sudo vi /opt/ssh/etc/sshd_config</code>
+<pre>
+Replace #Banner none with 
+Banner /etc/issue
+</pre>
+<code>sudo /sbin/init.d/secsh stop</code>
+<br>
+<code>sudo /sbin/init.d/secsh start</code>
+
+<p>then logoff and re-log on- should take effect</p>
+
+<a href="#toc">Back to TOC</a>
+
+<!--Backup SW Client Installation -->
+<a name="backup"></a>
+<h3>Avamar Client Install</h3>
+<p>Configure BaaS Nics [<a href="#network">network configuration</a>]</p>
+
+<p>Add Hosts file entries from W:\Storage & Recovery Services\BaaS\Software\DOR/hosts to local hosts file</p>
+
+<p>Copy AvamarClient-hpux11iv3-itan-7.1.102-21.depot from W:\Storage & Recovery Services\BaaS\Software\Avamar Agents\7.1.2 Agents\HP-UX 11v 11.31 to your home folder on the HP-UX server</p>
+<code>sudo /usr/sbin/swinstall -s /home/vagninib/AvamarClient-hpux11iv3-itan-7.1.102-21.depot</code>
+<br>
+<code>sudo /opt/AVMRclnt/bin/avregister</code>
+
+<pre>
+For IMSDevx and IMSQASx registrations
+10.201.8.70
+/DOR/DOR-GTA/ (if you aren't sure, ask the Backup team)
+</pre>
+
+<p>(per <a href="http://community.hpe.com/t5/System-Administration/nsswitch-conf-configuration/td-p/4544538">nsswitch.conf</a>)</p>
+<code>sudo cp -p /etc/nsswitch.files /etc/nsswitch.conf</code>
+<p>edit the hosts line in /etc/nsswitch.conf to reflect</p>
+<pre>
+hosts: files [NOTFOUND=continue] dns
+</pre>
+<h4>Networker on HP-UX</h4>
+
+<p>removed old version of Network 8.1.2.5</p>
+<p>installed new version (8.2.2)</p>
+
+<p>renamed /opt/networker/bin/lgtolmd and /opt/networker/bin/nsrd to /opt/networker/bin/lgtolmd.050116  and /opt/networker/bin/nsrd.050116</p>
+
+<code> /sbin/init.d/networker start<br></code>#
+
+<pre>
+Starting nsrexecd
+</pre>
+<code># ps -eaf |grep nsr</code><br>
+<pre>
+    root 19870     1  4 16:31:47 ?         0:00 /opt/networker/bin/nsrexecd
+    root 19872 18994  0 16:31:55 pts/6     0:00 grep nsr
+</pre>
+<code># swlist</code><br>
+<pre>
+ NetWorker                     8.2.2          NetWorker   
+</pre>
+
+<!--Sendmail configuration -->
+<a name="sendmail"></a>
+<h4>Sendmail configuration</h4>
+
+<a href="http://scratching.psybermonkey.net/2011/03/sendmail-how-to-test-sending-email.html">testing sendmail</a>
+<br>
+<code>sudo vi /etc/mail/sendmail.cf </code>
+<p>/DS and Enter then n until you see the following line below:</p>
+<p> For DOR servers at NWRDC</p>
+<pre>
+# "Smart" relay host (may be null)
+DSFDOREXCHHV.FDOR.DOR.STATE.FL.US
+</pre>
+<p> For DOR Servers located elsewhere</p>
+<pre>
+# "Smart" relay host (may be null)
+DSDORQUEST.FDOR.DOR.STATE.FL.US
+</pre>
+<p> Also look for:</p>
+<pre>
+# queue directory
+O QueueDirectory=/var/spool/mqueue
+</pre>
+
+<p>Edit aliases file</p>
+<code>sudo vi /etc/aliases</code>
+<pre>
+# Person who should get root's mail
+#root:          marc
+root:           NWRUnix-DOR@nwrdc.fsu.edu
+security:       Security_UNIX_Log_DOR@nwrdc.fsu.edu
+</pre>
+
+<code>sudo newaliases</code>
+<br>
+<code>sudo tail /var/log/maillog</code>
+<p> This is to watch the smtp traffic</p>
+
+<code>sudo sendmail -q -v</code>
+<br>
+<code>nslookup nwrdc.fsu.edu</code>
+<p> This is because of the security alias- checking to see if the server can resolve nwrdc.fsu,edu</p>
+
+<p> If it cannot, then need to look at the resolv.conf file</p>
+<code>sudo vi /etc/resolv.conf</code>
+
+<p>should contain:</p>
+<pre>
+search fdor.dor.state.fl.us
+nameserver 204.89.74.180
+nameserver 204.89.74.18
+</pre>
+
+<p> if necessary...</p>
+<code>/sbin/service sendmail restart</code>
+<br>
+or
+per <a href="http://kmit4u.blogspot.com/2010/09/unix-startstoprestart-sendmail.html">Start/stop sendmail</a>
+<br>
+<code>/sbin/init.d/sendmail stop</code>
+<br>
+<code>/sbin/init.d/sendmail start</code>
+
+<p>May need to have a file called /etc/mail/submit.cf that mirrors the contents of /etc/mail/sendmail.cf</p>
+
+<code>sudo cp -p /etc/mail/sendmail.cf /etc/mail/submit.cf</code>
+<br>
+<code>sudo vi /etc/mail/sendmail.cf </code>
+<p>Add this at the bottom for the file (WARNING: LONG file - use G in vi to go to the very bottom of the file)</p>
+<pre>O PrivacyOptions=goaway </pre>
+<p>to dissallow the remote SMTP server answering to the EXPN and/or VRFY commands.</p>
+
+<a href="#toc">Back to TOC</a>
+
+
+<!--Security hardening -->
+<a name="harden"></a>
+<h2>Security Hardening</h2>
+<h4>Disable Root Login via ssh</h4>
+<a href="http://simplesapbasis.blogspot.com/2012/09/hp-ux-disable-root-ssh-login.html">Disable Root login</a>
+<br>
+<code>sudo vi /opt/ssh/etc/sshd_config</code>
+<pre>Replace
+PermitRootLogin yes
+ with 
+PermitRootLogin no
+</pre>
+<h4>Disable Version 1 of the protocol</h4>
+per <a href="http://community.hpe.com/t5/Security/Disable-SSH1-support/td-p/3871819">disable ssh1</a>
+<pre>
+Protocol 2
+#Protocol 2,1
+</pre>
+<code>sudo /sbin/init.d/secsh stop</code>
+<br>
+<code>sudo /sbin/init.d/secsh start</code>
+
+<p>then logoff and re-log on- should take effect</p>
+
+<h4>Disable unnecessary services</h4>
+<code>sudo vi /etc/inetd.conf</code>
+<pre>
+#telnet       stream tcp6 nowait root /usr/lbin/telnetd  telnetd  (port 23)
+#login        stream tcp6 nowait root /usr/lbin/rlogind  rlogind (port 513)
+#exec         stream tcp6 nowait root /usr/lbin/rexecd   rexecd (port 512)
+</pre>
+then 
+ <code>sudo /usr/sbin/inetd -c </code>
+<p>to re-read the config file</p>
+OR
+<code>sudo /usr/sbin/inetd -k stop </code> (THIS DOESN"T WORK- reboot the damn box instead)
+<br>
+<code>sudo /usr/sbin/inetd start</code>
+
+<p>Can also check via nmap</p>
+<code>[vagninib@csebpe01 ~]$ sudo nmap -O 192.168.162.62</code>
+<pre>
+Starting Nmap 5.51 ( http://nmap.org ) at 2016-02-02 17:31 EST
+Nmap scan report for imsdevx.fdor.dor.state.fl.us (192.168.162.62)
+Host is up (0.00020s latency).
+Not shown: 974 closed ports
+PORT      STATE SERVICE
+7/tcp     open  echo
+9/tcp     open  discard
+13/tcp    open  daytime
+19/tcp    open  chargen
+21/tcp    open  ftp
+22/tcp    open  ssh
+25/tcp    open  smtp
+37/tcp    open  time
+111/tcp   open  rpcbind
+113/tcp   open  auth
+135/tcp   open  msrpc
+514/tcp   open  shell
+515/tcp   open  printer
+543/tcp   open  klogin
+544/tcp   open  kshell
+587/tcp   open  submission
+901/tcp   open  samba-swat
+2049/tcp  open  nfs
+2121/tcp  open  ccproxy-ftp
+2301/tcp  open  compaqdiag
+4045/tcp  open  lockd
+49152/tcp open  unknown
+49153/tcp open  unknown
+49154/tcp open  unknown
+49157/tcp open  unknown
+49163/tcp open  unknown
+Device type: general purpose
+Running: HP HP-UX 11.X
+OS details: HP HP-UX B.11.00 - B.11.31
+Network Distance: 1 hop
+
+OS detection performed. Please report any incorrect results at http://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 1.39 seconds
+</pre>
+
+<a href="#toc">Back to TOC</a>
+
+<!--Software Installation/Patching -->
+<a name="swinstall"></a>
+<h4>Installing software (using swinstall)</h4>
+<p> To get official software for HP-UX (requires an HP Passport acct)</p>
+<p><a href="https://h20589.www2.hpe.com/portal/swdepot/index.do">https://h20589.www2.hpe.com/portal/swdepot/index.do</a></p>
+<a href="http://hpux.connect.org.uk/hppd/hpux/">Software source in the UK</a></p>
+
+<p>From <a href ="http://h30499.www3.hp.com/t5/System-Administration/how-to-extract-a-gz-file-on-HP-UX/td-p/2814746#.VVD78JPGpKo">http://h30499.www3.hp.com/t5/System-Administration/how-to-extract-a-gz-file-on-HP-UX/td-p/2814746#.VVD78JPGpKo</a>
+</p>
+<h4>Unpacking the software</h4>
+<code>sudo /usr/contrib/bin/gunzip emacs-22.3-ia64-11.31.depot.tar.gz</code><br>
+This unpacks the .gz to a .tar<br>
+<code>sudo /etc/tar xvf emacs-22.3-ia64-11.31.depot.tar</code><br>
+This unpacks the .tar to a .depot<br>
+<br>or <br>
+<p><code>$ sudo /usr/contrib/bin/gunzip emacs-22.3-ia64-11.31.depot.gz</code></p>
+unpacks to emacs-22.3-ia64-11.31.depot
+<br>
+Then 
+<p> (For the swinstall options)</p>
+<code>$ sudo /usr/sbin/swinstall -s</code><br>
+
+yields:
+<pre>
+/usr/sbin/swinstall: option requires an argument -- s
+Usage: swinstall [options] [software_selections] [@ target_selections]
+
+Options include:
+
+    -i                invoke the graphical user interface (GUI)
+    <Xt options>      XToolKit options (GUI only)
+    -p                preview the session without modifying anything
+                      (i.e. exit after the analysis phase)
+    -v                write verbose output to stdout
+    -r                target selections are alternate root directories
+
+    -c catalog        use the exported catalog structure at this path
+                      as the source of the "response" files
+    -s source         read the software selections from this source
+    -x option=value   set the option to value
+    -X option_file    read option definitions from this file
+    -f software_file  read software selections from this file
+    -t target_file    read target selections from this file
+    -C session_file   user saved session file
+    -Q MM/DD[/YYYY][,HH:MM][AM|PM]   schedule the job for this date
+    -S session_file   read options, software selections, and target
+                      selections from this file
+
+Software selections are specified as:
+
+    product[.subproduct][.fileset][,version][:location] ...
+
+where version is either
+
+    [r=revision][,a=arch][,v=vendor][,l=location]
+    instance_id
+
+Target selections are specified as:
+
+    @ [host][:][path]
+
+</pre>
+<strong>This is the easiest way</strong>
+<p> <code>sudo /usr/sbin/swinstall -s /home/vagninib/emacs-22.3-ia64-11.31.depot</code></p>
+
+yields:
+<pre>
+NOTE:    The interactive UI was invoked, since no software was
+         specified. <strong>(Fixed up above)</strong>
+		
+         
+Starting the terminal version of swinstall...
+ 
+To move around in swinstall:
+
+- use the "Tab" key to move between screen elements
+- use the arrow keys to move within screen elements
+- use "Ctrl-F" for context-sensitive help anywhere in swinstall
+
+On screens with a menubar at the top like this:
+
+        ------------------------------------------------------
+       |File View Options Actions                         Help|
+       | ---- ---- ------- ------------------------------- ---|
+
+- use "Tab" to move from the list to the menubar
+- use the arrow keys to move around
+- use "Return" to pull down a menu or select a menu item
+- use "Tab" to move from the menubar to the list without selecting a menu item
+- use the spacebar to select an item in the list
+
+On any screen, press "CTRL-K" for more information on how to use the keyboard.
+
+Press "Return" to continue...
+</pre>
+<p> Note: If you don't specify, then you will have to tab over until you specify the exact path and filename of the depot</p>
+<p>At that point, you will have to mark it for installation by pressing the SPACE bar (it will not give a very good indicator that it's selected)</p>
+<p> then press M for mark</p>
+<p>Tab over to ""Actions > Install"" </p>
+<p>Tab through once the installation is finished to tell the swinstall text-based installer that it's ""Done"" and then File > Exit</p>
+<strong> Confirming that it's been installed</strong>
+<p> $ sudo find / -name "emacs"</p>
+outputs:
+<pre>
+/opt/gtk2.6/share/emacs
+/usr/local/bin/emacs
+/usr/local/doc/emacs
+/usr/local/share/emacs
+/usr/local/share/info/emacs
+/usr/local/libexec/emacs
+/usr/local/var/games/emacs
+/var/adm/sw/products/emacs
+</pre>
+<p> or you can use</p>
+<code> whereis emacs</code><br>
+<h4> Dependency Issues</h4>
+<p> <code>sudo /usr/local/bin/depothelper -o 11.31 -l emacs-22.3-ia64-11.31.depot</code></p>
+<p> README is at <a href="http://hpux.connect.org.uk/hppd/hpux/Sysadmin/depothelper-2.00/readme.html">http://hpux.connect.org.uk/hppd/hpux/Sysadmin/depothelper-2.00/readme.html</a></p>
+
+<p>Resources: <br>
+<a href="https://h20565.www2.hpe.com/portal/site/hpsc/patch/help?spfViewFile=/patch/html/patchingHpuxHelp.html">Patches</a></p>
+<h3> Patches</h3>
+<h4>Patching individual packages</h4>
+<p>Download the patch from the download link in the critical advisory and copy it to your home folder on the server. Extract until you have a depot file. </p>
+<p>Install the patch the same way that you would install any other software package (see above).</p>
+<h4>Notes on Patching CIFS</h4>
+<p>You MUST copy the /var/opt/samba/private/* files if you are updating the CIFS (or Samba) Server! Otherwise, it can wipe out the list of samba users.
+<br> <strong>Stop the samba services prior to updating CIFS server.</strong></p>
+<!-- Commented out due to it not quite working right. Left in just in case the HP Portal does start working correctly...
+<p>Run swainv (DO A WHEREIS on it for the path...)</p>
+<p>Chown inventory.xml to your user acct</p>
+<p>Copy to your Desktop</p>
+<p>Upload to HPE.com for list of patches needed (via "Upload new system information" link)- issue with portal availability as of 5:04 PM 1/31/2016</p>
+<p>OR...</p>
+<p> This seems to work better</p>
+-->
+<h4>Patching HP-UX via SWA</h4>
+<p> THE SETUP</p>
+<p>You will need a .swa/cache folder in your home folder</p>
+<p> If you get a "Failed to access authorization service. " message...</p>
+
+<p>Look at "/etc/opt/swa/swa.conf"</p>
+<code>sudo vi /etc/opt/swa/swa.conf</code>
+
+<p>Change the following:</p>
+<ul>
+<li>hp_id</li>
+<p> NOTE: your HP Passport is your email address at nwrdc. HP-UX does NOT like the @ when you are typing. DO NOT erase @ symbol from the email address in the hp_id field.</p>
+<li>https_proxy =https://proxy2.fdor.dor.state.fl.us:8080</li>
+<li>http_proxy =http://proxy2.fdor.dor.state.fl.us:8080</li>
+<li>ftp_proxy =ftp://proxy2.fdor.dor.state.fl.us:8080</li>
+</ul>
+<p>Per <a href="http://community.hpe.com/t5/Patches/Error-while-using-SWA-Failed-to-access-authorization-service/td-p/5906257">http://community.hpe.com/t5/Patches/Error-while-using-SWA-Failed-to-access-authorization-service/td-p/5906257</a> </p>
+
+<code>sudo /opt/swa/bin/swa report -v -x crl_check=false </code>
+<p> Per <a href="http://community.hpe.com/t5/Patches/SWA-C-02-75-2-Failed-to-access-authorization-service/td-p/5258100">http://community.hpe.com/t5/Patches/SWA-C-02-75-2-Failed-to-access-authorization-service/td-p/5258100</a></p>
+
+<p>Download SWA and install to the server</p>
+<a href="https://h20392.www2.hpe.com/portal/swdepot/displayProductInfo.do?productNumber=B6834AA">https://h20392.www2.hpe.com/portal/swdepot/displayProductInfo.do?productNumber=B6834AA</a>
+
+
+<p>(Per <a href="https://sites.google.com/site/jdisnard/kb/hp-ux-patching-with-swa">https://sites.google.com/site/jdisnard/kb/hp-ux-patching-with-swa</a>)</p>
+
+<code>sudo /opt/swa/bin/swa clean all</code>
+<p>(cleans out /var/opt/swa/cache/hp-ux_patches/11.X/)</p>
+
+<code>sudo /opt/swa/bin/swa report -v -x crl_check=false</code>
+<p>(runs report of needed patches- copy this report to a text file for comparison later)</p>
+<p>(You will need your HP Passport password for the next few steps)</p>
+
+<code>sudo /opt/swa/bin/swa get -v -p -t QPK </code> 
+<p>(Practice run for downloading the patches- MAY have to free up disk space)</p>
+<p>You CAN run this from somewhere else that has more storage space...do a bdf to check disk space if necessary</p>
+
+<code>sudo /opt/swa/bin/swa get -v -t QPK</code>
+<p>(Get the updates and start the depot building process)</p>
+<p>(Check the log file /var/opt/swa/swa.log for the estimated space needed (in bytes)- looking for "NOTE:    Estimated total download size:"</p>
+
+<p>Patches should be downloading into the following location: /var/opt/swa/cache/hp-ux_patches/11.X/</p>
+
+<code> sudo /usr/sbin/swinstall -s /home/vagninib/QPK</code>
+<p>If you ran the "swa get" command (up above) from somewhere other than your home folder (/tmp or /u01, for example), then change the source location in /swinstall -s to match</p>
+<p>(Apply the patches, reboot (allow for ~8-10 minutes for the reboot))</p>
+
+<code>sudo /opt/swa/bin/swa report -v -x crl_check=false</code>
+<p>(runs report of needed patches- verification against the previous report)</p>
+
+<a href="#toc">Back to TOC</a>
+
+<!-- Sudo Info -->
+<a name="sudo"></a>
+<h2>Sudo</h2>
+<p>copy ixSudo_ixSudo_A.19.00-1.7.10p3.001_HP-UX_B.11.31_IA_PA.depot (from angela's folder or from IMSDevx folder) to your home folder</p>
+<code>/usr/sbin/swinstall -s /home/vagninib/ixSudo_ixSudo_A.19.00-1.7.10p3.001_HP-UX_B.11.31_IA_PA.depot</code>
+<br>
+<a href="#toc">Back to TOC</a>
+
+<!-- Disk Info -->
+
+<a name="disk"></a>
+<h2>Disk info</h2>
+<p> Determine which disk(s) are available to configure</p>
+<code>sudo /usr/sbin/ioscan -kfnNCdisk</code>
+<pre>
+Class     I  H/W Path  Driver S/W State   H/W Type     Description
+===================================================================
+disk      2  64000/0xfa00/0x0  esdisk   CLAIMED     DEVICE       HP      Virtual LvDisk
+                      /dev/disk/disk2   /dev/rdisk/disk2
+disk      3  64000/0xfa00/0x1  esdisk   CLAIMED     DEVICE       HP      Virtual LvDisk
+                      /dev/disk/disk3      /dev/disk/disk3_p2   /dev/rdisk/disk3     /dev/rdisk/disk3_p2
+                      /dev/disk/disk3_p1   /dev/disk/disk3_p3   /dev/rdisk/disk3_p1  /dev/rdisk/disk3_p3
+
+sudo /usr/sbin/diskinfo /dev/rdisk/disk2
+SCSI describe of /dev/rdisk/disk2:
+             vendor: HP      
+         product id: Virtual LvDisk  
+               type: direct access
+               size: 968065024 Kbytes
+   bytes per sector: 512
+sudo /usr/sbin/diskinfo /dev/rdisk/disk3
+SCSI describe of /dev/rdisk/disk3:
+             vendor: HP      
+         product id: Virtual LvDisk  
+               type: direct access
+               size: 104857600 Kbytes
+   bytes per sector: 512
+   </pre>
+   <p> We now know that disk2 is the newly added disk, so we need to create a physical disk in the OS</p>
+<code>sudo /usr/sbin/pvcreate -f /dev/rdisk/disk2</code>
+<pre>
+Physical volume "/dev/rdisk/disk2" has been successfully created.
+</pre>
+
+<p> Create a volume group called "vg_data" on physical disk2</p>
+<code>sudo /usr/sbin/vgcreate -V 2.2 -S 1t -s 16 vg_data /dev/disk/disk2</code>
+<pre>
+Volume group "/dev/vg_data" has been successfully created.
+Volume Group configuration for /dev/vg_data has been saved in /etc/lvmconf/vg_data.conf
+</pre>
+
+<p> Create a logical volume called "lv_u01" on volume group "vg_data"</p>
+<code>sudo /usr/sbin/lvcreate -L 146485 -n lv_u01 /dev/vg_data</code>
+Warning: rounding up logical volume size to extent boundary at size "146496" MB.
+Logical volume "/dev/vg_data/lv_u01" has been successfully created with
+character device "/dev/vg_data/rlv_u01".
+Logical volume "/dev/vg_data/lv_u01" has been successfully extended.
+Volume Group configuration for /dev/vg_data has been saved in /etc/lvmconf/vg_data.conf
+
+<p> Rinse and repeat for all logical volumes, adjusting the sizes and name...</p>
+
+<p>Create a filesystem on the new logical volume(s)</p>
+<code>sudo /usr/sbin/newfs -F vxfs /dev/vg_data/rlv_u01</code>
+<pre>
+    version 7 layout
+    150011904 sectors, 150011904 blocks of size 1024, log size 65536 blocks
+    largefiles supported
+</pre>
+
+<p>Make a folder on / for the new filesystem(s)</p>
+<code>sudo /usr/sbin/mkdir /u01</code>
+
+<p>Mount the filesystem lv_u01 to the new folder /u01</p>
+<code>sudo /usr/sbin/mount /dev/vg_data/lv_u01 /u01</code>
+
+<p>/etc/fstab edited to reflect the following:</p>
+<pre>
+/dev/vg_data/lv_u01 /u01 vxfs defaults 0 2
+</pre>
+
+<h3>Extending a mount point when the SAN storage has been provided</h3>
+<ol>
+<p> where /dev/rdsk/c7t0d1 is the new LUN added</p>
+<li>/usr/sbin/diskinfo /dev/rdsk/c7t0d1</li>
+<p>Tell the system to find the new LUN (if the above doesn't display it)</p>
+<li>/usr/sbin/ioscan</li>
+<p> Install any new hardware into the system (if necessary)</p>
+<li>/usr/sbin/insf -e</li>
+<p> Display info about the new LUN</p>
+<li>/usr/sbin/diskinfo /dev/rdsk/c9t1d1</li>
+<li>/usr/bin/strings /etc/lvmtab</li>
+<li>/usr/bin/strings VG_XIV.conf</li>
+<li>/usr/bin/strings /etc/lvmtab_p</li>
+<li>/usr/sbin/ioscan -funC disk</li>
+<li>/opt/fcms/bin/fcmsutil</li>
+<li>/usr/bin/strings /etc/lvmtab_p</li>
+<p> Step 1: Create a physical volume using the new LUN that Storage team provided</p>
+<li>/usr/sbin/pvcreate /dev/rdsk/c9t1d1</li>
+<p>Step 2: Extend the Volume Group using the newly created physical disk (as well as the other three paths used to access the LUN)</p>
+<li>/usr/sbin/vgextend /dev/VG_XIV /dev/dsk/c9t1d1 /dev/dsk/c3t1d1 /dev/rdsk/c7t1d1 /dev/rdsk/c5t1d1</li>
+<p> Step 3: Check your work to verify that the Volume Group was indeed extended</p>
+<li>/usr/sbin/vgdisplay -v VG_XIV</li>
+<p>Step 4: Extend the Logical Volume using the total size of the logical extents (copied from previous command) </p>
+<li>/usr/sbin/lvextend -l 76489 /dev/VG_XIV/lv_oracle_backup</li>
+<p>Step 5: Tell the file system that it's been expanded (Note: fsadm is an optional package that must be purchased. It allows you to not have to unmount and remount filesystems.)</p>
+<li>/usr/sbin/fsadm -b 2447648M /oracle_recovery</li>
+<p> The 2447648M in the above command is the new size of the filesystem in Mb- leaving off the M will SHRINK your volume and you will have a VERY bad day...</p>
+</ol>
+
+<h4>Extend /home to 10 GB</h4> 
+<p>(issue is that home is currently underneath the logical volume / and not a separate logical volume called /home, as it should have been)</p>
+<code>sudo /usr/sbin/lvcreate -L 10240 -n home /dev/vg00</code><br>
+
+<code>sudo /usr/sbin/newfs -F vxfs /dev/vg00/rhome</code><br>
+
+<code>sudo /sbin/mkdir /home1</code><br>  
+
+<code>sudo /usr/sbin/mount /dev/vg00/home /home1</code><br>
+
+<code>/dev/vg00/home /home vxfs defaults 0 2</code><br>
+
+<p>Had permissions issues (fix documented in IMSDevx file)</p>
+
+
+
+<!--
+<a name="df"></a>
+<h3>df commands</h3>
+sudo df -b -k
+<p>yields this:</p>
+<pre>
+/tmp                   (/dev/vg00/lvol4       ) :   520560 total allocated Kb
+                                                    490504 free allocated Kb
+                                                     30056 used allocated Kb
+                                                         6 % allocation used
+/home                  (/dev/vg00/lvol5       ) :  4182656 total allocated Kb
+                                                   1479704 free allocated Kb
+                                                   2702952 used allocated Kb
+                                                        65 % allocation used
+/opt                   (/dev/vg00/lvol6       ) :  9699744 total allocated Kb
+                                                   4118672 free allocated Kb
+                                                   5581072 used allocated Kb
+                                                        58 % allocation used
+/usr                   (/dev/vg00/lvol7       ) :  7469960 total allocated Kb
+                                                   4309784 free allocated Kb
+                                                   3160176 used allocated Kb
+                                                        43 % allocation used
+/var/opt/ignite        (/dev/vg00/lv_varoptignite) : 90914957 total allocated Kb
+                                                  20397520 free allocated Kb
+                                                  70517437 used allocated Kb
+                                                        78 % allocation used
+/var                   (/dev/vg00/lvol8       ) : 15655560 total allocated Kb
+                                                   9489800 free allocated Kb
+                                                   6165760 used allocated Kb
+                                                        40 % allocation used
+/stand                 (/dev/vg00/lvol1       ) :  1823680 total allocated Kb
+                                                   1447664 free allocated Kb
+                                                    376016 used allocated Kb
+                                                        21 % allocation used
+/                      (/dev/vg00/lvol3       ) :  1042392 total allocated Kb
+                                                    799576 free allocated Kb
+                                                    242816 used allocated Kb
+                                                        24 % allocation used
+</pre>
+<pre>
+df recognizes the following options:
+
+           -b             Report only the number of kilobytes (KB) free.
+
+           -e             Report the number of files free.
+
+           -f             Report only the actual count of the blocks in the
+                          free list (free inodes are not reported).
+
+           -F FStype      Report only on the FStype file system type (see
+                          fstyp(1M)).
+
+           -g             Report the entire structure described in
+                          statvfs(2).
+
+           -i             Report the total number of inodes, the number of
+                          free inodes, number of used inodes, and the
+                          percentage of inodes in use.
+
+           -k             Report the allocation in kilobytes (KB).
+
+           -l             Report on local file systems only.
+
+           -n             Report the file system name.  If used with no
+                          other options, display a list of mounted file
+                          system types.
+
+           -o specific_options
+                          Specify options specific to each file system type.
+                          specific_options is a comma-separated list of
+                          suboptions intended for a specific FStype module
+                          of the command.  See the file-system-specific
+</pre>
+
+<a name="ioscan"></a>
+<h3>ioscan</h3>
+
+sudo ioscan -m dsf
+<p>outputs:</p>
+<pre>
+
+Persistent DSF           Legacy DSF(s)
+========================================
+/dev/rdisk/disk2         /dev/rdsk/c0t0d0
+/dev/rdisk/disk2_p1      /dev/rdsk/c0t0d0s1
+/dev/rdisk/disk2_p2      /dev/rdsk/c0t0d0s2
+/dev/rdisk/disk2_p3      /dev/rdsk/c0t0d0s3
+/dev/rdisk/disk3         /dev/rdsk/c1t0d0
+/dev/rdisk/disk7         /dev/rdsk/c3t0d0
+                         /dev/rdsk/c4t0d0
+</pre>
+
+$ sudo /usr/sbin/ioscan -m dsf /dev/rdisk/disk9
+
+<p>outputs:</p>
+<pre>
+Persistent DSF           Legacy DSF(s)
+========================================
+/dev/rdisk/disk9         /dev/rdsk/c2t0d0
+                         /dev/rdsk/c3t0d0
+</pre>
+
+<h3>Determining Which HBA FibreChannel Cards are installed</h3>
+
+$ sudo /usr/sbin/ioscan -fnC fc
+
+<p>outputs:</p>
+<pre>
+
+Class     I  H/W Path       Driver S/W State   H/W Type     Description
+=====================================================================
+fc        0  0/0/0/5/0/0/0  fcd   CLAIMED     INTERFACE    HP 451871-B21 8Gb Dual Port PCIe Fibre Channel Mezzanine (FC Port 1)
+                           /dev/fcd0
+fc        1  0/0/0/5/0/0/1  fcd   CLAIMED     INTERFACE    HP 451871-B21 8Gb Dual Port PCIe Fibre Channel Mezzanine (FC Port 2)
+                           /dev/fcd1
+</pre>
+
+$ sudo /usr/sbin/ioscan -fnC disk |page
+
+<p>outputs:</p>
+<pre>
+Class     I  H/W Path        Driver S/W State   H/W Type     Description
+========================================================================
+disk      0  0/0/0/1/0/0/0.0.0            sdisk   CLAIMED     DEVICE       HP   
+   LOGICAL VOLUME
+                            /dev/dsk/c0t0d0     /dev/rdsk/c0t0d0  
+                            /dev/dsk/c0t0d0s1   /dev/rdsk/c0t0d0s1
+                            /dev/dsk/c0t0d0s2   /dev/rdsk/c0t0d0s2
+                            /dev/dsk/c0t0d0s3   /dev/rdsk/c0t0d0s3
+disk      4  0/0/0/9/0/0/0.1.3.255.0.0.0  sdisk   CLAIMED     DEVICE       DGC  
+   RAID 5
+                            /dev/dsk/c3t0d0   /dev/rdsk/c3t0d0
+disk      6  0/0/0/9/0/0/1.1.3.255.0.0.0  sdisk   CLAIMED     DEVICE       DGC  
+   RAID 5
+                            /dev/dsk/c4t0d0   /dev/rdsk/c4t0d0
+disk      1  0/0/0/31/2.0.0  sdisk   CLAIMED     DEVICE       hp      DVD D  DS8
+D3SH
+                            /dev/dsk/c1t0d0   /dev/rdsk/c1t0d0
+</pre>
+
+sudo /usr/sbin/ioscan -kfnNC disk
+
+<p>outputs:</p>
+<pre>
+Class     I  H/W Path  Driver S/W State   H/W Type     Description
+===================================================================
+disk      1  64000/0xfa00/0x1  esdisk   CLAIMED     DEVICE       HP      LOGICAL VOLUME
+                      /dev/disk/disk1      /dev/disk/disk1_p2   /dev/rdisk/disk1     /dev/rdisk/disk1_p2
+                      /dev/disk/disk1_p1   /dev/disk/disk1_p3   /dev/rdisk/disk1_p1  /dev/rdisk/disk1_p3
+disk      9  64000/0xfa00/0x6  esdisk   CLAIMED     DEVICE       DGC     RAID 5
+                      /dev/disk/disk9   /dev/rdisk/disk9
+disk     10  64000/0xfa00/0x7  esdisk   CLAIMED     DEVICE       DGC     RAID 5
+                      /dev/disk/disk10   /dev/rdisk/disk10
+disk     11  64000/0xfa00/0x8  esdisk   CLAIMED     DEVICE       DGC     RAID 5
+                      /dev/disk/disk11   /dev/rdisk/disk11
+disk     13  64000/0xfa00/0x9  esdisk   CLAIMED     DEVICE       DGC     RAID 5
+                      /dev/disk/disk13   /dev/rdisk/disk13
+disk     16  64000/0xfa00/0xa  esdisk   CLAIMED     DEVICE       DGC     RAID 5
+                      /dev/disk/disk16   /dev/rdisk/disk16
+disk     19  64000/0xfa00/0xb  esdisk   CLAIMED     DEVICE       DGC     RAID 5
+                      /dev/disk/disk19   /dev/rdisk/disk19
+
+</pre>
+<a href="#toc">Back to TOC</a>
+<a name="scsimgr"></a>
+<h3>scsimgr</h3>
+sudo /usr/sbin/scsimgr lun_map -D /dev/rdisk/disk9
+
+<p>outputs:</p>
+<pre>
+        LUN PATH INFORMATION FOR LUN : /dev/rdisk/disk9
+
+Total number of LUN paths     = 2
+World Wide Identifier(WWID)    = 0x6006016023d125002af23a5a265ee111
+
+LUN path : lunpath2
+Class                         = lunpath
+Instance                      = 2
+Hardware path                 = 0/0/0/5/0/0/1.0x5006016f44600dde.0x0
+SCSI transport protocol       = fibre_channel
+State                         = ACTIVE
+Last Open or Close state      = ACTIVE
+
+LUN path : lunpath3
+Class                         = lunpath
+Instance                      = 3
+Hardware path                 = 0/0/0/5/0/0/0.0x5006016644600dde.0x0
+SCSI transport protocol       = fibre_channel
+State                         = ACTIVE
+Last Open or Close state      = ACTIVE
+</pre>
+
+	
+$ sudo /usr/sbin/scsimgr get_info all_lpt -D /dev/rdisk/disk9
+
+<p>outputs:</p>
+
+<pre>
+        STATUS INFORMATION FOR LUN PATH : lunpath2
+
+Generic Status Information
+
+SCSI services internal state                  = ACTIVE
+Open close state                              = ACTIVE
+Protocol                                      = fibre_channel
+EVPD page 0x83 description code               = 1
+EVPD page 0x83 description association        = 0
+EVPD page 0x83 description type               = 3
+World Wide Identifier (WWID)                  = 0x6006016023d125002af23a5a265ee111
+Total number of Outstanding I/Os              = 0
+Maximum I/O timeout in seconds                = 30
+Maximum I/O size allowed                      = 2097152
+Maximum number of active I/Os allowed         = 8
+Maximum queue depth                           = 8
+Queue full delay count                        = 0
+Asymmetric state                              = NA
+Device preferred path                         = No
+Relative target port identifier               = 16
+Target port group identifier                  = 2
+
+        STATUS INFORMATION FOR LUN PATH : lunpath3
+
+Generic Status Information
+
+SCSI services internal state                  = ACTIVE
+Open close state                              = ACTIVE
+Protocol                                      = fibre_channel
+EVPD page 0x83 description code               = 1
+EVPD page 0x83 description association        = 0
+EVPD page 0x83 description type               = 3
+World Wide Identifier (WWID)                  = 0x6006016023d125002af23a5a265ee111
+Total number of Outstanding I/Os              = 0
+Maximum I/O timeout in seconds                = 30
+Maximum I/O size allowed                      = 2097152
+Maximum number of active I/Os allowed         = 8
+Maximum queue depth                           = 8
+Queue full delay count                        = 0
+Asymmetric state                              = NA
+Device preferred path                         = No
+Relative target port identifier               = 7
+Target port group identifier                  = 1
+</pre>
+$ sudo /usr/sbin/scsimgr get_info -D /dev/rdisk/disk9
+
+<p>outputs:</p>
+
+<pre>
+        STATUS INFORMATION FOR LUN : /dev/rdisk/disk9
+
+Generic Status Information
+
+SCSI services internal state                  = ONLINE
+Device type                                   = Direct_Access
+EVPD page 0x83 description code               = 1
+EVPD page 0x83 description association        = 0
+EVPD page 0x83 description type               = 3
+World Wide Identifier (WWID)                  = 0x6006016023d125002af23a5a265ee111
+Serial number                                 = "APM00094600732"
+Vendor id                                     = "DGC     "
+Product id                                    = "RAID 5          "
+Product revision                              = "0429"
+Other properties                              = ""
+SPC protocol revision                         = 4
+Open count (includes chr/blk/pass-thru/class) = 4
+Raw open count (includes class/pass-thru)     = 1
+Pass-thru opens                               = 0
+LUN path count                                = 2
+Active LUN paths                              = 2
+Standby LUN paths                             = 0
+Failed LUN paths                              = 0
+Maximum I/O size allowed                      = 2097152
+Preferred I/O size                            = 2097152
+Outstanding I/Os                              = 0
+I/O load balance policy                       = round_robin
+Path fail threshold time period               = 0
+Transient time period                         = 120
+Tracing buffer size                           = 1024
+LUN Path used when policy is path_lockdown    = NA
+LUN access type                               = NA
+Asymmetric logical unit access supported      = No
+Asymmetric states supported                   = NA
+Preferred paths reported by device            = No
+Preferred LUN paths                           = 0
+
+Driver esdisk Status Information : 
+
+Capacity in number of blocks                      = 2147483648
+Block size in bytes                               = 512
+Number of active IOs                              = 0
+Special properties                                = 
+Maximum number of IO retries                      = 45
+IO transfer timeout in secs                       = 30
+FORMAT command timeout in secs                    = 86400
+START UNIT command timeout in secs                = 60
+Timeout in secs before starting failing IO        = 120
+IO infinite retries                               = false
+</pre>	
+	
+sudo /usr/sbin/lvdisplay -v /dev/vg00/lv_varoptignite |more
+
+<p>outputs:</p>
+<pre>
+--- Logical volumes ---
+LV Name                     /dev/vg00/lv_varoptignite
+VG Name                     /dev/vg00
+LV Permission               read/write                
+LV Status                   available/syncd           
+Mirror copies               0            
+Consistency Recovery        MWC                 
+Schedule                    parallel      
+LV Size (Mbytes)            90112           
+Current LE                  2816      
+Allocated PE                2816        
+Stripes                     0       
+Stripe Size (Kbytes)        0                   
+Bad block                   on           
+Allocation                  strict                    
+IO Timeout (Seconds)        default             
+
+   --- Distribution of logical volume ---
+   PV Name                 LE on PV  PE on PV  
+   /dev/disk/disk2_p2      2816      2816      
+
+   --- Logical extents ---
+   LE    PV1                     PE1   Status 1 
+   00000 /dev/disk/disk2_p2      01494 current  
+   00001 /dev/disk/disk2_p2      01495 current  
+   00002 /dev/disk/disk2_p2      01496 current  
+   00003 /dev/disk/disk2_p2      01497 current 
+(etc. it goes on for a while)
+
+</pre>   
+
+<h3>Adding SAN storage to a volume group</h3>	
+<strong>Step 1:</strong>
+sudo pvcreate -f /dev/rdisk/disk7
+or
+sudo pvcreate -f /dev/rdsk/c3t0d0
+
+<p>(Create the Physical Volume (in this case, disk7 or the actual disk name- disk 7 is preferred due to multipathing))</p>
+
+<strong>Step 2:</strong>
+sudo dd if=/dev/dsk/c3t0d0 of=/dev/null bs=1024 count=25000
+
+<p>(This tests whether or not we can read and write to the physical disk)</p>
+
+<strong>Step3:</strong>
+sudo vgextend /dev/vg00 /dev/dsk/c4t0d0
+
+<p>(Extends the vg00 volume group by adding disk7 to it)</p>
+
+ vgdisplay -v |grep LV
+
+ <p>outputs:</p>
+ <pre>
+ Max LV                      255    
+Cur LV                      9      
+Open LV                     9      
+   LV Name                     /dev/vg00/lvol1
+   LV Status                   available/syncd           
+   LV Size (Mbytes)            1792            
+   LV Name                     /dev/vg00/lvol2
+   LV Status                   available/syncd           
+   LV Size (Mbytes)            8192            
+   LV Name                     /dev/vg00/lvol3
+   LV Status                   available/syncd           
+   LV Size (Mbytes)            1024            
+   LV Name                     /dev/vg00/lvol4
+   LV Status                   available/syncd           
+   LV Size (Mbytes)            512             
+   LV Name                     /dev/vg00/lvol5
+   LV Status                   available/syncd           
+   LV Size (Mbytes)            4096            
+   LV Name                     /dev/vg00/lvol6
+   LV Status                   available/syncd           
+   LV Size (Mbytes)            9504            
+   LV Name                     /dev/vg00/lvol7
+   LV Status                   available/syncd           
+   LV Size (Mbytes)            7328            
+   LV Name                     /dev/vg00/lvol8
+   LV Status                   available/syncd           
+   LV Size (Mbytes)            15360           
+   LV Name                     /dev/vg00/lv_varoptignite
+   LV Status                   available/syncd           
+   LV Size (Mbytes)            90112           
+</pre>
+ vgdisplay vg00
+ 
+ <p>outputs:</p>
+ <pre>
+--- Volume groups ---
+VG Name                     /dev/vg00
+VG Write Access             read/write     
+VG Status                   available                 
+Max LV                      255    
+Cur LV                      9      
+Open LV                     9      
+Max PV                      16     
+Cur PV                      1      
+Act PV                      1      
+Max PE per PV               4356         
+VGDA                        2   
+PE Size (Mbytes)            32              
+Total PE                    4346    
+Alloc PE                    4310    
+Free PE                     36      
+Total PVG                   0        
+Total Spare PVs             0              
+Total Spare PVs in use      0                     
+VG Version                  1.0       
+VG Max Size                 2178g      
+VG Max Extents              69696         
+</pre>
+$ sudo diskinfo /dev/rdisk/disk7
+
+<p>outputs:</p>
+<pre>
+SCSI describe of /dev/rdisk/disk7:
+             vendor: DGC     
+         product id: RAID 5          
+               type: direct access
+               size: 52428800 Kbytes
+   bytes per sector: 512
+</pre>
+<a href="#toc">Back to TOC</a>
+
+<a name="pvdisplay"></a>
+<h3>pvdisplay</h3>
+<p>pvdisplay info coming soon</p>
+<a href="#toc">Back to TOC</a>
+
+<a name="lvdisplay"></a>
+<h3>lvdisplay</h3>
+<p>lvdisplay info coming soon</p>
+<a href="#toc">Back to TOC</a>
+
+<a name="vgdisplay"></a>
+<h3>vgdisplay</h3>
+<p>vgdisplay info coming soon</p>
+<a href="#toc">Back to TOC</a>
+-->
+<!-- Ignite Info -->
+<a name="ignite"></a>
+<h2>Ignite_IMS Server info</h2>
+<p> The path to the HP-UX backups is /var/opt/ignite/recovery/archives</p>
+<p> To run the Ignite software:</p>
+<p>sudo ./opt/ignite/bin/ignite</p>
+
+<p>Contents of ignite_backup.sh on IMSDev</p>
+<pre>
+$ sudo cat usr/local/scripts/ignite_backup.sh
+#!/usr/bin/sh
+/opt/ignite/binia/make_net_recovery -A -s ignite_ims
+</pre>
+<p>You can manually run it from the client via "sudo /opt/ignite/binia/make_net_recovery -A -s ignite_ims"</p>
+
+<!-- XServer / X11 Info -->
+<a name="x11"></a>
+
+<h4>For "X11 not working"</h4>
+<p>Test from fdorwsusnwhv.fdor.dor.state.fl.us</p>
+
+<p>(per <a href="http://www.unix.com/hp-ux/41425-export-display-through-telnet-xming.html">http://www.unix.com/hp-ux/41425-export-display-through-telnet-xming.html</a> )</p>
+<p>The "trick" with Xming is to FIRST start it via the XLaunch (icon or command), NOT the Xming command/icon. <br>
+That's because XLaunch allows you to check "No Access Control" which tells Xming to allow other IP's in. <br>
+Starting Xming with the Xming command, causes the default "only allow in local host" mode.<br>
+I was confused by this and first started Xming via "Xming" and didn't understand the role of XLaunch.</p>
+
+<p>This works just fine ...</p>
+
+<p>also this: (from Paul)</p>
+
+<p>update the X0.hosts file with the target server IPs in the XMING installation directory</p>
+
+<h4>Enable X11 forwarding</h4>
+<p>maybe <a href="http://www.techotopia.com/index.php/Displaying_RHEL_6_Applications_Remotely_%28X11_Forwarding%29">http://www.techotopia.com/index.php/Displaying_RHEL_6_Applications_Remotely_%28X11_Forwarding%29</a></p>
+<p><a href="https://wiki.utdallas.edu/wiki/display/FAQ/X11+Forwarding+using+Xming+and+PuTTY">https://wiki.utdallas.edu/wiki/display/FAQ/X11+Forwarding+using+Xming+and+PuTTY</a></p>
+<p><a href="http://community.hpe.com/t5/Networking/Configuring-X11-forwarding-with-HP-UX-Secure-Shell/td-p/3930449">http://community.hpe.com/t5/Networking/Configuring-X11-forwarding-with-HP-UX-Secure-Shell/td-p/3930449</a></p>
+
+<h4>Start X11 again on IMSDevx</h4>
+<p><a href="http://www.tunza.com/books/hpux/start1.html">http://www.tunza.com/books/hpux/start1.html</a>  #this explains the startup process somewhat??</p>
+<p>and <a href="http://nixdoc.net/man-pages/HP-UX/man1/Xserver.1.html">http://nixdoc.net/man-pages/HP-UX/man1/Xserver.1.html</a></p>
+<p>and <a href="http://nixdoc.net/man-pages/HP-UX/man1/Xhp.1.html">http://nixdoc.net/man-pages/HP-UX/man1/Xhp.1.html</a></p>
+
+<code>sudo vi /etc/inittab</code><br>
+<pre>
+"inittab" [Read only] 37 lines, 2233 characters 
+init:3:initdefault:
+ioin::sysinit:/sbin/ioinitrc >/dev/console 2>&1
+tape::sysinit:/sbin/mtinit > /dev/console 2>&1
+muxi::sysinit:/sbin/dasetup   </dev/console >/dev/console 2>&1 # mux init
+stty::sysinit:/sbin/stty 9600 clocal icanon echo opost onlcr ixon icrnl ignpar </dev/systty
+fs01::wait:/sbin/fs/fsdaemon -k > /dev/null 2>&1  # kill fsdaemon
+fs02:123456:respawn:/sbin/fs/fsdaemon -f 0 > /dev/null 2>&1  # start fsdaemon
+fs03::wait:/sbin/fs/fsdaemon -t > /dev/null 2>&1  # Wait for fsdaemon to start
+vxen::bootwait:/sbin/fs/vxfs/vxenablef -a
+brc1::bootwait:/sbin/bcheckrc </dev/console >/dev/console 2>&1 # fsck, etc.
+link::wait:/sbin/sh -c "/sbin/rm -f /dev/syscon; \
+                        /sbin/ln /dev/systty /dev/syscon" >/dev/console 2>&1
+cprt::bootwait:/sbin/cat /etc/copyright >/dev/syscon           # legal req
+sqnc::wait:/sbin/rc </dev/console >/dev/console 2>&1           # system init
+#powf::powerwait:/sbin/powerfail >/dev/console 2>&1            # powerfail
+cons:123456:respawn:/usr/sbin/getty console console            # system console
+#ttp1:234:respawn:/usr/sbin/getty -h tty0p1 9600
+#ttp2:234:respawn:/usr/sbin/getty -h tty0p2 9600
+#ttp3:234:respawn:/usr/sbin/getty -h tty0p3 9600
+#ttp4:234:respawn:/usr/sbin/getty -h tty0p4 9600
+#ttp5:234:respawn:/usr/sbin/getty -h tty0p5 9600
+krsd:123456:respawn:/sbin/krsd -i
+cspd::boot:/sbin/clu_spawnd -i
+sfd:123456:respawn:/sbin/sfd
+esmd:234:respawn:/usr/sbin/esmd
+#ups::respawn:rtprio 0 /usr/lbin/ups_mond -f /etc/ups_conf
+cim1:3456:respawn:/opt/wbem/lbin/cimserverd
+vxfs:1:sysinit:/sbin/fs/vxfs5.0/vxenablef -a
+ems1::bootwait:/sbin/rm -f /etc/opt/resmon/persistence/runlevel4_flag
+ems2::bootwait:/sbin/sh -c "/sbin/cat </dev/null >/etc/opt/resmon/persistence/reboot_flag; /sbin/chmod 6
+44 /etc/opt/resmon/persistence/reboot_flag"
+ems3:3456:wait:/sbin/sh -c "/usr/bin/touch /etc/opt/resmon/persistence/runlevel4_flag; /usr/bin/chmod 64
+4 /etc/opt/resmon/persistence/runlevel4_flag"
+ems4:3456:respawn:/etc/opt/resmon/lbin/p_client
+cdsf:23456:respawn:/usr/sbin/iocdsfd
+cdin:3456:once:/usr/sbin/clu_dsf_init
+util:23456:respawn:/usr/lbin/utild # Utilization Provider daemon
+hpvm::respawn:/opt/hpvm/bin/hpvmgud -p 1>/dev/null 2>&1
+gvsd::sysinit:/sbin/init.d/avio-vio avioinit >/dev/console 2>&1
+</pre>
+<p>maybe add? -commented out<br>
+X11:23456:respawn:/usr/bin/X11/Xhp</p>
+
+<p>Xserver listens on TCP/UDP port 6000 + the display port, which is 0 through 3</p>
+
+<h4>Testing the x11 server</h4>
+<p>Signed into FDORWSUSNWHV.fdor.dor.state.fl.us</p>
+<p>Double clicked on XMing</p>
+<p>Just tested imsdevx.fdor.dor.state.fl.us (turned on X11 Forwarding in Putty on the WSUS server)</p>
+<p>Ran xclock</p>
+<p>Xming window popped up with the clock running</p>
+
+<p><Ran netstat -a on WSUS server</p>
+<code>PS C:\Users\VagniniB> netstat -an</code><br>
+<pre>
+Active Connections
+
+  Proto  Local Address          Foreign Address        State
+  TCP    0.0.0.0:80             0.0.0.0:0              LISTENING
+  TCP    0.0.0.0:135            0.0.0.0:0              LISTENING
+  TCP    0.0.0.0:445            0.0.0.0:0              LISTENING
+  TCP    0.0.0.0:2738           0.0.0.0:0              LISTENING
+  TCP    0.0.0.0:3389           0.0.0.0:0              LISTENING
+  TCP    0.0.0.0:6000           0.0.0.0:0              LISTENING
+  TCP    0.0.0.0:8081           0.0.0.0:0              LISTENING
+  TCP    0.0.0.0:28002          0.0.0.0:0              LISTENING
+  TCP    0.0.0.0:47001          0.0.0.0:0              LISTENING
+  TCP    0.0.0.0:49152          0.0.0.0:0              LISTENING
+  TCP    0.0.0.0:49153          0.0.0.0:0              LISTENING
+  TCP    0.0.0.0:49154          0.0.0.0:0              LISTENING
+  TCP    0.0.0.0:49199          0.0.0.0:0              LISTENING
+  TCP    0.0.0.0:49215          0.0.0.0:0              LISTENING
+  TCP    0.0.0.0:49218          0.0.0.0:0              LISTENING
+  TCP    127.0.0.1:6000         127.0.0.1:58960        ESTABLISHED
+  TCP    127.0.0.1:6000         127.0.0.1:58961        ESTABLISHED
+  TCP    127.0.0.1:6000         127.0.0.1:58962        ESTABLISHED
+  TCP    127.0.0.1:6000         127.0.0.1:58964        ESTABLISHED
+  TCP    127.0.0.1:28002        127.0.0.1:58959        ESTABLISHED
+  TCP    127.0.0.1:49195        0.0.0.0:0              LISTENING
+  TCP    127.0.0.1:58959        127.0.0.1:28002        ESTABLISHED
+  TCP    127.0.0.1:58960        127.0.0.1:6000         ESTABLISHED
+  TCP    127.0.0.1:58961        127.0.0.1:6000         ESTABLISHED
+  TCP    127.0.0.1:58962        127.0.0.1:6000         ESTABLISHED
+  TCP    127.0.0.1:58964        127.0.0.1:6000         ESTABLISHED
+  TCP    204.89.120.194:80      204.89.74.10:11283     TIME_WAIT
+  TCP    204.89.120.194:80      204.89.125.42:61484    ESTABLISHED
+  TCP    204.89.120.194:3389    10.200.3.66:50745      ESTABLISHED
+  TCP    204.89.120.194:58963   192.168.162.62:22      ESTABLISHED
+  TCP    [::]:80                [::]:0                 LISTENING
+  TCP    [::]:135               [::]:0                 LISTENING
+  TCP    [::]:445               [::]:0                 LISTENING
+  TCP    [::]:3389              [::]:0                 LISTENING
+  TCP    [::]:8081              [::]:0                 LISTENING
+  TCP    [::]:28002             [::]:0                 LISTENING
+  TCP    [::]:47001             [::]:0                 LISTENING
+  TCP    [::]:49152             [::]:0                 LISTENING
+  TCP    [::]:49153             [::]:0                 LISTENING
+  TCP    [::]:49154             [::]:0                 LISTENING
+  TCP    [::]:49199             [::]:0                 LISTENING
+  TCP    [::]:49215             [::]:0                 LISTENING
+  TCP    [::]:49218             [::]:0                 LISTENING
+  UDP    0.0.0.0:123            *:*
+  UDP    0.0.0.0:161            *:*
+  UDP    0.0.0.0:500            *:*
+  UDP    0.0.0.0:4500           *:*
+  UDP    0.0.0.0:5355           *:*
+  UDP    0.0.0.0:8082           *:*
+  UDP    0.0.0.0:60879          *:*
+  UDP    127.0.0.1:57256        *:*
+  UDP    127.0.0.1:57321        *:*
+  UDP    127.0.0.1:61957        *:*
+  UDP    127.0.0.1:64324        *:*
+  UDP    [::]:123               *:*
+  UDP    [::]:161               *:*
+  UDP    [::]:500               *:*
+  UDP    [::]:4500              *:*
+  UDP    [::]:8082              *:*
+PS C:\Users\VagniniB>
+</pre>
+<p><a href="http://community.hpe.com/t5/System-Administration/ssh-server-can-t-forward-X11-on-HP-UX-11-3/td-p/4694602">http://community.hpe.com/t5/System-Administration/ssh-server-can-t-forward-X11-on-HP-UX-11-3/td-p/4694602</a></p>
+
+<a href="#toc">Back to TOC</a>
+
+<!-- Misc Info -->
+<a name="misc"></a>
+<h2>Misc Commands </h2>
+<h3> Boot Sequence</h3>
+
+Here we are going to take a look at the boot sequence of HP-UX.<br />
+<br />
+It is basically divided into 2 main parts,<br />
+a. Boot PROM Startup - Same like other systems<br />
+b. HP-UX Startup - Included ISL, SSL (hpux), kernel (/stand/vmunix), swapper, init and /etc/inittab<br />
+<br />
+Here is the boot sequence given in steps ,<br />
+<br />
+1. Power On the system or Reboot the System<br />
+2. Processor Dependent Code<br />
+&nbsp;&nbsp;&nbsp;&nbsp; - PDC gets executed and it performs the initial self-test include processor, memory and also detects&nbsp; <br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; peripherals attached to the system.<br />
+&nbsp;&nbsp;&nbsp;&nbsp; - If auto boot is disabled, it displays a menu list, something like smsin aix, bios in your pc.<br />
+3. PDC initializes the console to display boot messages and any errors. Then it looks for the primary boot path.<br />
+<u><i>Note:</i></u> boot path is nothing but the hardware path to the bood disk<br />
+4. Initial System Loader from the boot dick gets loaded into the memory and executed by PDC<br />
+5. Secondary System Loader 'hpux' gets loaded into the memory by the ISL. "hpux" is stored in the boot sector of the boot disk.<br />
+6. SSL hpux loads the kernel "/stand/vmunix" into the memory and from here kernel takes over the control.<br />
+7. Kernel then loads the device drivers and starts the process "swapper" <br />
+8. Swapper process (PID = 0)&nbsp;then intiates a shell process to execute commands from /sbin/pre_init_rc<br />
+9. Finally kernel loads the system's first process called "init". Hence init pid is always 1.<br />
+10. The init process processes the /etc/inittab file and runs the startup scripts to start other daemons and processes based on the default run level set. This will take the system to the default run level and from now on users can login to the system.<br />
+<br />
+<b><u>Few Points:</u></b><br />
+<br />
+Stable Storage:<br />
+Primary / alternate boot paths, console, autoboot mode, autosearch values are stored in the stable storage. This information is used by the PDC. To change any of these values, you can use "configure"&nbsp;&nbsp;command.<br />
+<br />
+<b><u>Few PDC commands:</u></b><br />
+<br />
+1. To boot in single-user mode for maintenance purpose :<br />
+<br />
+&gt; boot pri -is<br />
+<br />
+<b><u>Few ISL Commands:</u></b><br />
+<br />
+1. To boot in single-user mode :<br />
+ISL &gt; hpux -is<br />
+<br />
+2. To boot from alternate kernel :<br />
+ISL &gt; hpux /stand/vmunix.old<br />
+<br />
+3. To boot in single-user mode using an alternate kernel :<br />
+ISL &gt; hpux -is /stand/vmunix.old<br />
+<br />
+4. To display the version of hpux utility :<br />
+ISL &gt; hpux -v<br />
+<br />
+5. To display the files in the /stand directory (mostly used to find the alternate kernel file name) :<br />
+ISL &gt; hpux ll /stand<br />
+<br />
+<br />
+<b><u>Contents of Boot Area:</u></b><br />
+<br />
+Boot disk contains a boot area and a root partition plus swap space and other file systems. <br />
+Boot area contains the below stuff :<br />
+<br />
+a. An LIF volume header that indentifies the LIF volume<br />
+b. A file containing&nbsp;a HP-UX volume name<br />
+c.&nbsp;A directory that contains a list of files contained in this area<br />
+d. Initial System Loader (ISL)<br />
+e. A secondary System Loader (hpux)<br />
+f. A file named AUTO - Contains the hpux utility name and any arguments to be passed onto hpux.<br />
+<br />
+To list the contents of the boot area:<br />
+<br />
+# lifls -l /dev/dsk/c0t0d0<br />
+<br />
+where cotod0 is the boot disk ie., controller 0, target 0, disk 0<br />
+<br />
+<b><u>Few Boot list commands :</u></b><br />
+<br />
+1. To view the current primary, alternate bootpaths, autoboot and autosearch :<br />
+<br />
+# setboot<br />
+<br />
+2. What is the command to install files in the LIF area :<br />
+<br />
+# mkboot<br />
+<br />
+3. What is the command to delete files in the LIF area :<br />
+<br />
+# rmboot<br />
+<br />
+<b><u>Available Run Levels:</u></b><br />
+<br />
+<b>0</b> - Terminates all the processes by going to the lower run levels and finally shuts down the system<br />
+<br />
+<b>s</b> - Single User Mode. Only one physical console can be used. Only the root file system is mounted. Only the processes (daemons) those having keyword sysinit in the /etc/inittab are started and any other daemon started by the kernel.<br />
+<br />
+<b>S</b> - It is functionally same as &#8216;s&#8217; with the exception that the current terminal will be considered as console (virtual).<br />
+<br />
+<b>1</b> - It is above run level &#8216;s&#8217;. The system is dedicated to one user but all the file systems are mounted, with a process known as &#8216;syncer&#8217; running.<br />
+<br />
+<b>2</b> - Multiuser run level with no NFS<br />
+<br />
+<b>3</b> - Functionally same as &#8220;2&#8221;, with Network daemons, NFS, Web-base administration, graphical presentation managers running.<br />
+<br />
+<b>4</b> - Currently not available. You can customize this as per your environment.<br />
+<br />
+<b>5</b> - Currently not available. You can customize this as per your environment.<br />
+<br />
+<b>6</b> - Currently not available. You can customize this as per your environment.<br />
+<br />
+You can use 'init' command to change the run level.<br />
+For Ex., to goto run level 3 from single-user mode <br />
+# init 3<br />
+<br />
+<b><u>Few Commands:</u></b><br />
+<br />
+1. To display the current run level :<br />
+<br />
+# who -r<br />
+<br />
+2. To immediately shutdown a system with no interactive response :<br />
+<br />
+# shutdown -h -y 0<br />
+<br />
+<b><u>Note:</u></b> You can use "reboot" command if you're running in a single user mode. It normally kills all the daemons instead of gracefull terminating them. So its not recommended in&nbsp;multi-user mode.<br />
+<br />
+3. To shutdown a system with no interative response after 60 seconds :<br />
+<br />
+# shutdown -h -y 60<br />
+<br />
+4. To shutdown a system immediately and to reboot :<br />
+<br />
+# shutdown -r -y 0<br />
+<br />
+5. How to view the shutdown and reboot times for the&nbsp;system :<br />
+<br />
+# cat /etc/shutdown.log<br />
+<br />
+6. How to allow&nbsp;an user called joe from a remote machine (workstation1)&nbsp;to shutdown the system server1 :<br />
+<br />
+Just add the below lines to /etc/shuwdown.allow<br />
+<br />
+workstation joe<br />
+<br />
+For Ex., # echo "workstation joe" &gt;&gt; /etc/shutdown.allow<br />
+<br />
+7. To shutdown a server to a single user mode :<br />
+# shutdown<br />
+
+
+<h3>Single User mode to reset/unlock passwords (due to no one being able to log in)</h3>
+<p> Sign into the ILO (for ignite_ims, it's 204.89.87.242- do this from Firefox)</p>
+<p>Click on Remote Serial Console and click Launch- you need to be able to see what's happening</p>
+<p>Do a graceful shutdown (Click on Power and Reset, then Momentary Press) </p>
+<p>Power on the server (Momemtary Press?) </p>
+<p>Once it starts to boot up, press Ctrl+B to interrupt the boot process </p>
+<p>It will ask for instructions- press B for boot </p>
+<p>The server will then prompt you with "hpux>"</p>
+<p>Type in "boot vmunix -is" (this boots up into hpux, but in single user mode) </p>
+<p>In order to reset a password or unlock the accounts, you will need /usr/lbin mounted. Do this with "/sbin/mount -a" </p>
+<p>Unlock/reset passwords as you normally do</p>
+<p>When finished in single user mode, type in "init 3" to go into multi-user mode (so you don't have to restart the server). </p>
+
+
+
+
+<h3>Symbolic links (aka shortcuts)</h3>
+<p> The syntax is "sudo ln -s Sourcefile SymLinkName"</p>
+<pre>
+$ sudo ln -s WFLIB.jar wflib.jar
+</pre>
+<p> The actual file is WFLIB.jar, and we want a link/shortcut that's called wflib.jar (lowercase)</p>
+
+<p>Better example:</p>
+<p>CD to /home/brian (on my Git server at home)</br>
+We want a shortcut called projects inside of /home/brian, but the projects folder actually lives in /home/git/projects</p>
+<pre>
+sudo ln -s /home/git/projects projects
+</pre>
+
+<h3>Migrating to a new server</h3>
+<p>Do this process for /etc/passwd, /etc/group, /etc/shadow (if applicable) & 
+<br>/etc/sudoers (which is really at /opt/iexpress/sudo/etc/sudoers and /tcb/files/auth (for HP-UX Trusted systems)</p>
+
+<p>(via http://linux.die.net/man/1/tar  and http://linux.die.net/man/1/tar)</p>
+
+<p>sudo /sbin/tar -crvf passwd.tar /etc/passwd </p>
+<p>then use scp<br>
+sudo /usr/bin/scp  -p -v /passwd.tar  vagninib@192.168.162.10:~/passwd.tar </p>
+<p>open another session to the new server<br>
+sudo /usr/sbin/visudo or sudo vi /etc/passwd or whatever the actual file is that you are moving/replacing<br>
+<em>(leave this open just in case you screw something up and lock yourself out of being able to fix it)</em></p>
+<p>then restore the file <em>(via http://www.tecmint.com/18-tar-command-examples-in-linux/)</em><br>
+sudo /sbin/tar xvf passwd.tar<br> 
+(puts it right where it's supposed to go...in /etc)</p>
+<p>sign out of both windows (after confirming that the replacement worked)<br>
+(this is because you signed in under one UID, then replaced who that UID belonged to)</p>
+
+<p>sign back in (run whoami to confirm)</p>
+
+<p>repeat for /etc/group</p>
+<p><strong>For Sudoers file</strong></p>
+<p>sudo /sbin/tar -crvf sudoers.tar /opt/iexpress/sudo/etc/sudoers<br>
+cp /etc/sudoers.tar ~/sudoers.tar</p>
+
+<p>sudo /usr/bin/scp -p -v sudoers.tar vagninib@192.168.162.10:~/sudoers.tar<br>
+sudo /sbin/tar xvf sudoers.tar</p>
+
+<p><strong>For Trusted systems (HP-UX only)</strong></p>
+<p>sudo /sbin/tar -crvf auth.tar /tcb/files/auth/  # on old server<br>
+sudo cp -rP /tcb/files/auth /tcb/files/auth102215  # on new server- just in case<br>
+(cp switches via http://www.unix.com/hp-ux/250653-recursive-copy-folders-files.html<br>
+sudo /sbin/tar xvf auth.tar</p>
+
+<p>per<a href="http://unix.ittoolbox.com/groups/technical-functional/hp-ux-l/hpux-trusted-system-and-shadow-passwords-2067590">http://unix.ittoolbox.com/groups/technical-functional/hp-ux-l/hpux-trusted-system-and-shadow-passwords-2067590</a></p>
+
+<p><a href="http://community.hpe.com/t5/System-Administration/Step-to-convert-system-to-trusted-system-for-HP-UX-11i/td-p/4902449">http://community.hpe.com/t5/System-Administration/Step-to-convert-system-to-trusted-system-for-HP-UX-11i/td-p/4902449</a></p>
+
+
+<h3>Known Issues </h3>
+<p>Batch Manager is receiving a communication error, this usually means that Apache on the IMS production Unix box needs to be restarted.</p>
+<code>/opt/hpws/apache/bin/httpd -d /opt/hpws/apache -k start</code>>
+<p>apache2 is located at /opt/hpapache2/bin</p>
+<code>sudo ./apachectl start</code>
+
+
+<h4>Resources</h4>
+<p><a href="http://hpunix.blogspot.com/2011/05/part-i-fundamentals-of-unix-systems.html">A blog about HP-UX-  http://hpunix.blogspot.com/2011/05/part-i-fundamentals-of-unix-systems.html </a></p>
+<p><a href="https://download.samba.org/pub/rsync/rsync.html">Rsync Man page - html format </a></p>
+
+<a href="#toc">Back to TOC</a>
+
+<h3>IMS documentation</h3>
+<p>Sharepoint location is: </p>
+<a href="http://intranet.nwrdc.com/sites/opensystems/server/Shared%20Documents/DOR%20-%20Department%20of%20Revenue/IMS%20Imaging%20Servers/">http://intranet.nwrdc.com/sites/opensystems/server/Shared%20Documents/DOR%20-%20Department%20of%20Revenue/IMS%20Imaging%20Servers/</a>
+<p>and</p>
+<a href="http://intranet.nwrdc.com/sites/opensystems/server/Shared%20Documents/DOR%20-%20Department%20of%20Revenue/IMS%20Imaging%20Servers/Imaging%20Documentation_091713.docx">http://intranet.nwrdc.com/sites/opensystems/server/Shared%20Documents/DOR%20-%20Department%20of%20Revenue/IMS%20Imaging%20Servers/Imaging%20Documentation_091713.docx</a>
+
+</body>
+</html>

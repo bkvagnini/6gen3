@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title> RHEL commands</title>
+</head>
+<body>
+<h1> RHEL Commands</h1>
+<a name="toc"></a>
+<p>TOC</p>
+<ul>
+<li><a href="#user">user accounts</a></li>
+<!--<li><a href="#acl">ACL's</a></li>
+<li><a href="#smb">samba</a></li> -->
+<li><a href="#services">Services</a></li>
+<li><a href="#net">Network</a></li>
+<li><a href="#fw">firewall (IPTables)</a></li>
+<!--<li><a href="#cron">cron jobs</a></li>
+<li><a href="#swinstall">software installation</a></li>
+<li><a href="#disk">disk info</a></li> -->
+<li><a href="#misc">misc. info</a></li>
+</ul>
+<p><em>created 072215 bkv updated 102715 bkv</em></p>
+
+<!-- User Accounts -->
+<a name="user"></a>
+<h2> User Accounts</h2>
+<h3>Adding user accounts  (with home directories at the same time)</h3>
+<p>sudo /usr/sbin/useradd --home /home/hogans hogans</p>
+<p> The home folder is /home/hogans and the user account that we are adding is hogans</p>
+<p> an ll command yields this: </p>
+<pre>
+drwx------ 16 gonzalan  gonzalan  4096 Mar 20 03:30 gonzalan
+drwx------  3 hogans    hogans    4096 Jul 29 15:58 hogans
+drwx------  3 huffbr    huffbr    4096 Mar 31 04:12 huffbr
+</pre>
+<h3> Changing/Unlocking their Password/Resetting Passwords</h3>
+
+<p>sudo passwd hogans</p>  
+<h3> See a list of users</h3>
+<p>cat /etc/passwrd</p> 
+<pre>
+mortonan:x:520:520::/home/mortonan:/bin/bash
+chenl:x:521:521::/home/chenl:/bin/bash
+hogans:x:522:522::/home/hogans:/bin/bash
+phillipsa:x:523:523::/home/phillipsa:/bin/bash
+walkerja:x:524:524::/home/walkerja:/bin/bash
+</pre>  
+<p> The x after the first colon is the password field: it signifies that the actual password is in the /etc/shadow file, which only root can read </p>                       
+<p>sudo cat /etc/shadow</p> 
+<pre>
+...
+gonzalan:!!$1$sn3h3N/3$WJWiZbw.RKLGMJatZ9mud/:16524:0:99999:7:::
+devarapm:$1$bGt81MbE$vusNOnKn42Eil85CRTJH90:15351:0:99999:7:::
+...
+</pre>
+<p> The ! after the first colon signifies that the account is locked.</p>
+
+<h4>Unlocking an account</h4>
+<p>/usr/sbin/usermod -U gonzalan</p>
+<h4> Resetting an account password</h4>
+<p>/usr/sbin/usermod passwd gonzalan</p>
+<h4> Locking an account</h4>
+<p> sudo passwd -l gonzalan </p>
+<p>User account locked with the -l option can still log in by other methods such as the ssh public key authentication. <br />
+Use the following command to for full account locking:</p>
+<p>chage -E 0 gonzalan</p>
+<h3> Groups</h3>
+<p> sudo groupadd GROUPNAME</p>
+<h4>Add user to a single, existing group</h4>
+<p>usermod -G GROUPNAME hogans</p>
+<h4>Add user to a multiple, existing groups</h4>
+<p>usermod -G GROUPNAME,sales,support hogans</p>
+<h4>Delete a group</h4>
+<p>groupdel GROUPNAME</p>
+
+<h4>Confirming group membership</h4>
+<p>sudo groups averyd</p>
+<pre>
+averyd : averyd servlet_users (she is a member of averyd and servlet_users)
+</pre>
+<p>Or <br />
+cat /etc/group</p>
+
+<h4>visudo (or safely editing /etc/sudoers file)</h4>
+<p>sudo /usr/sbin/visudo</p>
+<p> Note: Replace CUSTOMER_ACCTS with the actual customers accounts</p>
+<pre>
+1. modify the /etc/sudoers file to reflect the following changes:
+CUSTOMER_ACCTS ALL=(ALL) ALL,!/bin/su, !/usr/bin/passwd root, !/usr/sbin/visudo, !/bin/*sh
+
+Add entries for users who need to perform functions beyond the capabilities of their basic account. Entries should look like this.
+
+Group
+%sysadmins ALL=(ALL) ALL ,!/bin/su, !/bin/*sh
+
+The purpose of these changes, are to ensure the integrity of our logging of commands issued as super user, <br />and to place an additional safety check on the /etc/sudoers configuration file.
+</pre>
+<p> After modifying the /etc/sudoers file (with visudo, of course), make it so that it can't be changed with chattr.</p>
+<h4>chattr</h4>
+<p>NOTE: This is only for Linux Systems; HP-UX does NOT have an equivalent command.</p>
+<p>chattr for /etc/sudoers file on RHEL systems</p>
+
+<p>This is what happens when you try to edit the sudoers file and chattr has been enabled.</p>
+<pre>
+[vagninib@dorsplnklx ~]$ sudo visudo
+visudo: /etc/sudoers: Permission denied
+visudo: /etc/sudoers: Permission denied
+</pre>
+<p>To disable chattr (making /etc/sudoers editable again)</p>
+<p>sudo chattr -i /etc/sudoers </p>
+<p>To re-enable chattr (making /etc/sudoers uneditable (or immutable) again)</p>
+<p>sudo chattr +i /etc/sudoers </p>
+
+<h4>Additional resources</h4>
+<p> <a href="http://www.linuxmail.info/how-to-add-remove-user-accounts-centos-5/">Add/Remove User Accounts</a></p>
+<p> <a href="http://linux.die.net/man/1/chattr">chattr</a></p>
+
+
+<a href="#toc">Back to TOC</a>
+
+<!-- Services -->
+<a name="services"></a>
+<h2>Services running (similar to running netstat?)</h2>
+<p>sudo lsof -i</p>
+<pre>
+COMMAND     PID     USER   FD   TYPE   DEVICE SIZE/OFF NODE NAME
+portreser  3488     root    5u  IPv4    21467      0t0  UDP *:ipp 
+rpcbind    3591      rpc    6u  IPv4    21822      0t0  UDP *:sunrpc 
+rpcbind    3591      rpc    7u  IPv4    21824      0t0  UDP *:798 
+rpcbind    3591      rpc    8u  IPv4    21825      0t0  TCP *:sunrpc (LISTEN)
+rpcbind    3591      rpc    9u  IPv6    21827      0t0  UDP *:sunrpc 
+rpcbind    3591      rpc   10u  IPv6    21829      0t0  UDP *:798 
+rpcbind    3591      rpc   11u  IPv6    21830      0t0  TCP *:sunrpc (LISTEN)
+rpc.statd  3753  rpcuser    5u  IPv4    22201      0t0  UDP localhost:961 
+rpc.statd  3753  rpcuser    8u  IPv4    22211      0t0  UDP *:62002 
+rpc.statd  3753  rpcuser    9u  IPv4    22215      0t0  TCP *:46836 (LISTEN)
+rpc.statd  3753  rpcuser   10u  IPv6    22219      0t0  UDP *:25491 
+rpc.statd  3753  rpcuser   11u  IPv6    22223      0t0  TCP *:46060 (LISTEN)
+tnslsnr    4005   oracle    9u  IPv6 22737514      0t0  TCP *:ncube-lm (LISTEN)
+snmpd      4019     root    8u  IPv4    23561      0t0  UDP *:snmp 
+snmpd      4019     root    9u  IPv4    23563      0t0  TCP localhost:smux (LISTEN)
+sshd       4034     root    3u  IPv4    23606      0t0  TCP *:ssh (LISTEN)
+sshd       4034     root    4u  IPv6    23615      0t0  TCP *:ssh (LISTEN)
+ntpd       4057      ntp   16u  IPv4    23674      0t0  UDP *:ntp 
+ (etc.)
+</pre>
+
+<a href="#toc">Back to TOC</a>
+
+<!-- Network -->
+<a name="net"></a>
+<h2> Network configuration</h2>
+
+<p>sudo /usr/sbin/system-config-network</p>
+<p>This brings up a text-based configuration utility that you can configure IP settings etc for all interfaces in the machine. Typically, we want eth0. </p> 
+<p> then do a "sudo service network restart"</p>
+
+<p>Path to network configuration files (to confirm that the above changes actually worked) </p>
+<p>/etc/sysconfig/network-scripts/</p>
+<p> cat ifcfg-eth0</p>
+<pre>
+DEVICE=eth0
+HWADDR=00:17:a4:77:60:1e
+TYPE=Ethernet
+UUID=f75aa027-0106-4140-b5fb-38e8baa81c56
+ONBOOT=yes
+NM_CONTROLLED=yes
+BOOTPROTO=none
+IPADDR=192.168.162.12
+NETMASK=255.255.255.192
+DNS2=204.89.74.18
+GATEWAY=192.168.162.1
+DNS1=204.89.74.180
+IPV6INIT=no
+USERCTL=no
+
+</pre>
+<p> For more info:</p>
+<a href="https://access.redhat.com/documentation/en-US/Red_Hat_Enterprise_Linux/6/html/Deployment_Guide/s1-networkscripts-interfaces.html">Man Page for Networking</a>
+<br />
+
+<h3>Updating DNS server records with the new server IP</h3>
+<pre>
+[vagninib@rmdbx ~]$ sudo /usr/bin/nsupdate
+
+> update delete rmdbx.fdor.dor.state.fl.us A
+> update add rmbdx.fdor.dor.state.fl.us 86400 A 192.168.162.12
+> send
+</pre>
+<p> via <a href="http://linux.die.net/man/8/nsupdate"> Man page for nsupdate</a></p>
+
+<h3>Verifying DNS changes via dig</h3>
+<p>dig statsdbx.fdor.dor.state.fl.us</p>
+<pre>
+; <<>> DiG 9.8.2rc1-RedHat-9.8.2-0.37.rc1.el6_7.2 <<>> statsdbx.fdor.dor.state.fl.us
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 59435
+;; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 0
+
+;; QUESTION SECTION:
+;statsdbx.fdor.dor.state.fl.us. IN      A
+
+;; ANSWER SECTION:
+statsdbx.fdor.dor.state.fl.us. 28800 IN A       192.168.162.24
+
+;; Query time: 1 msec
+;; SERVER: 204.89.74.180#53(204.89.74.180)
+;; WHEN: Mon Aug  3 16:00:42 2015
+;; MSG SIZE  rcvd: 63
+</pre>
+<p> Look for the answer section: You can also specify "dig statsdbx.fdor.dor.state.fl.us +noall +answer"</p>
+<pre>
+; <<>> DiG 9.8.2rc1-RedHat-9.8.2-0.37.rc1.el6_7.2 <<>> statsdbx.fdor.dor.state.fl.us +noall +answer
+;; global options: +cmd
+statsdbx.fdor.dor.state.fl.us. 28800 IN A       192.168.162.24
+</pre>
+
+<p> via <a href="http://www.thegeekstuff.com/2012/02/dig-command-examples/"> Man page for dig</a></p>
+<a href="#toc">Back to TOC</a>
+
+
+<!-- IPTables -->
+<a name="fw"></a>
+<h2> IPTables</h2>
+<h3>Modifying IPTables </h3>
+<p>sudo /usr/sbin/system-config-firewall</p>
+<p>This brings up a text-based configuration utility that you can configure firewall settings for the machine. </p> 
+<p> To confirm the changes</p>
+<p> sudo vi /etc/sysconfig/iptables</p>
+<pre>
+# Firewall configuration written by system-config-firewall
+# Manual customization of this file is not recommended.
+*filter
+:INPUT ACCEPT [0:0]
+:FORWARD ACCEPT [0:0]
+:OUTPUT ACCEPT [0:0]
+-A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+-A INPUT -p icmp -j ACCEPT
+-A INPUT -i lo -j ACCEPT
+-A INPUT -m state --state NEW -m tcp -p tcp --dport 22 -j ACCEPT
+-A INPUT -m state --state NEW -m tcp -p tcp --dport 25 -j ACCEPT
+-A INPUT -m state --state NEW -m tcp -p tcp --dport 1158 -j ACCEPT
+-A INPUT -m state --state NEW -m tcp -p tcp --dport 1521 -j ACCEPT
+-A INPUT -m state --state NEW -m tcp -p tcp --dport 1630 -j ACCEPT
+-A INPUT -m state --state NEW -m tcp -p tcp --dport 7937 -j ACCEPT
+-A INPUT -m state --state NEW -m tcp -p tcp --dport 7938 -j ACCEPT
+-A INPUT -j REJECT --reject-with icmp-host-prohibited
+-A FORWARD -j REJECT --reject-with icmp-host-prohibited
+COMMIT
+</pre>
+<p> For more info:</p>
+<a href="http://www.centos.org/docs/5/html/Deployment_Guide-en-US/ch-iptables.html">Man Page for IPTables</a>
+
+<h3> Starting/stopping IPTables</h3>
+<p> sudo /etc/init.d/iptables start</p>
+<p>outputs "iptables: Applying firewall rules:   "</p>
+<h3>Verifying that IPTables is running</h3>
+<p> sudo iptables -L</p>
+<pre>
+Chain INPUT (policy ACCEPT)
+target     prot opt source               destination         
+ACCEPT     all  --  anywhere             anywhere            state RELATED,ESTABLISHED 
+ACCEPT     icmp --  anywhere             anywhere            
+ACCEPT     all  --  anywhere             anywhere            
+ACCEPT     tcp  --  anywhere             anywhere            state NEW tcp dpt:ssh 
+ACCEPT     tcp  --  anywhere             anywhere            state NEW tcp dpt:smtp 
+ACCEPT     tcp  --  anywhere             anywhere            state NEW tcp dpt:dbcontrol-oms 
+ACCEPT     tcp  --  anywhere             anywhere            state NEW tcp dpt:ncube-lm 
+ACCEPT     tcp  --  anywhere             anywhere            state NEW tcp dpt:oraclenet8cman 
+ACCEPT     tcp  --  anywhere             anywhere            state NEW tcp dpt:7937 
+ACCEPT     tcp  --  anywhere             anywhere            state NEW tcp dpt:7938 
+REJECT     all  --  anywhere             anywhere            reject-with icmp-host-prohibited 
+
+Chain FORWARD (policy ACCEPT)
+target     prot opt source               destination         
+REJECT     all  --  anywhere             anywhere            reject-with icmp-host-prohibited 
+
+Chain OUTPUT (policy ACCEPT)
+target     prot opt source               destination         
+</pre>
+
+<a href="#toc">Back to TOC</a>
+
+<!-- Misc. Info -->
+<a name="misc"></a>
+<h2> Misc. Info</h2>
+<h3> Symbolic links</h3>
+<p>ln -s u01/lamother  /lamother
+<p>ls -l</p>
+<pre>
+lrwxrwxrwx.    1 root   root    13 Sep 17 09:40 lamother -> /u01/lamother
+</pre>
+<h3>Known Issues</h3>
+<h4>WebHeader (for printers on Sunrise)</h4>
+<p>sudo /etc/init.d/cups restart</p>
+
+<h4>Lsam error (on SDRBPE01A)</h4>
+<p> /etc/init.d/lsam4100 stop<br>
+ /etc/init.d/lsam4100 start</p>
+ 
+<h4>Stop/Start IPTables FW</h4>
+<p><em>(via http://www.ehowstuff.com/how-to-disable-firewall-on-rhel-6/ and 
+https://access.redhat.com/documentation/en-US/Red_Hat_Enterprise_Linux/4/html/System_Administration_Guide/s1-fireall-ipt-act.html)</em></p>
+
+<p>sudo /sbin/service iptables save<br>
+ sudo /sbin/service iptables stop<br>
+sudo /sbin/service ip6tables save<br>
+sudo /sbin/service ip6tables stop<br>
+sudo /sbin/service iptables start<br>
+To ensure that iptables starts when the system is booted, use the following command:<br>
+chkconfig --level 345 iptables on </p>
+
+<h3> Resources</h3>
+<p><a href="http://ss64.com/bash/">Commands for Linux</a></p>
+<p><a href="http://www.cyberciti.biz/faq/creating-soft-link-or-symbolic-link/">Symbolic links (aka shortcuts)</a></p>
+
+
+<a href="#toc">Back to TOC</a>
+
+</body>
+</html>

@@ -1,0 +1,69 @@
+-+-On Git Server-+-
+SSH to the server from a Terminal window
+	ssh git@GITSERVER
+Change directories to /home/git if not already there (pwd will tell you where you are)
+	cd /home/git 
+
+-Create the remote repo folder-
+	mkdir newProject.git
+ls -a to verify its creation
+Change directory to get into the repo
+	cd newProject.git
+We need to initialize the repo at this point, even though it’s empty on the server
+	git --bare init
+
+-+-On local machine-+-
+Make the directory 
+	mkdir newProject
+ Change directories to get inside of it
+	cd newProject
+Initialize git so that it’s tracking what happens in that folder
+	git init
+It will return:
+HOSTNAME:newProject USERNAME$ git status
+On branch master
+
+Initial commit
+
+MAKE CHANGES- WRITE CODE- Go to TAHITI
+
+Add your changed files
+	git add .
+Commit your changes to your local branch (master / develop/ whatever it’s called)
+	git commit -m “Message goes here”
+
+Now you need to add the remote repo to your local project
+	git remote add origin git@GITSERVER:/home/git/newProject.git
+
+You can confirm the creation of it.
+	git remote
+
+Finally, you can push your changes to the code in your local master branch to your newly added remote
+	git push origin master
+
+-+-2nd machine-+-
+Change to your projects folder (where all of your projects live)
+	git clone git@GITSERVER:/home/git/newProject.git
+
+OR
+
+Make the directory 
+	mkdir newProject
+ Change directories to get inside of it
+	cd newProject
+Initialize git so that it’s tracking what happens in that folder
+	git init
+It will return:
+HOSTNAME:newProject USERNAME$ git status
+On branch master
+
+Initial commit
+
+Now you need to add the remote repo to your local project
+	git remote add origin git@GITSERVER:/home/git/newProject.git
+
+You can confirm the creation of it.
+	git remote
+
+Finally, you can pull your changes to the code from your newly added remote to your local master branch
+	git pull origin master

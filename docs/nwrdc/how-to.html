@@ -1,0 +1,1657 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>How-to's</title>
+<link rel=stylesheet href="howto.css" type="text/css" media=screen>
+<!-- Yes. I know that you are supposed to properly indent all code. However, it really screws up the pre tags that I had to use 
+to show the expected output. If YOU want to mess around for a few weeks trying to get the formatting exactly right on the output, 
+then have at it, monkey boy; otherwise, cut me some slack...   -->
+</head>
+<body>
+
+<a name="toc"></a>
+<p>TOC</p>
+<ul>
+<li><a href="#user">user accounts</a></li>
+<li><a href="#groups">groups</a></li>
+<li><a href="#sudoers">sudoers</a></li>
+<li><a href="#permown">permissons/ownership</a></li>
+<li><a href="#acls">acls</a></li>
+<li><a href="#smb">samba</a></li>
+<li><a href="#services">Services</a></li>
+<li><a href="#net">Network</a></li>
+<li><a href="#dns">DNS</a></li>
+<li><a href="#fw">firewall (IPTables)</a></li>
+<li><a href="#symlinks">symbolic links</a></li>
+<li><a href="#migrate">migrating to a new server</a></li>
+<li><a href="#rsync">Rsync</a></li>
+<li><a href="#known">known issues</a></li>
+</ul>
+
+<p><em>created 110915 bkv updated 063016 bkv</em></p>
+<p> Search terms for the known issues section:</p>
+<p>WebHeader,lsam, profiled, Batch Manager, new packages, WMI Services, VSS Service writers, Windows Update, storage</p>
+<h1>DOR</h1>
+<!-- User Accounts -->
+<a name="user"></a>
+<h2> User Accounts</h2>
+<p class="os"> HP-UX</p>
+<h4>Locked accounts</h4>
+<p>Verify that the user account is, in fact, locked</p>
+<p><code>sudo /usr/lbin/getprpw fortunet </code></p>                                      
+
+<p>outputs:</p>
+<pre>
+uid=139, bootpw=NO, audid=205, audflg=1, mintm=-1, maxpwln=-1, exptm=-1, lftm=-1,
+<br> spwchg=Wed May  6 15:36:01 2015, upwchg=Wed May  6 15:00:14 2015, acctexp=-1,
+<br> llog=-1, expwarn=-1, usrpick=DFT, syspnpw=DFT, rstrpw=DFT, nullpw=DFT, admnum=-1,
+<br>syschpw=DFT, sysltpw=DFT, timeod=-1, slogint=Wed May  6 14:59:32 2015, ulogint
+<br>=Wed May  6 15:57:35 2015, sloginy=-1, culogin=9, uloginy=-1, umaxlntr=-1, alock=NO,
+<br> lockout=0001000
+</pre>
+ <p>anything other than all 0's in lockout= means that the account is locked</p>
+<p> from <a href="http://nixdoc.net/man-pages/HP-UX/getprpw.1m.html">http://nixdoc.net/man-pages/HP-UX/getprpw.1m.html</a></p>
+<pre>
+lockout returns the reason for a lockout in a "bit" valued
+  string, where 0 = condition not present, 1 is
+  present.  The position, left to right represents:
+
+  1 past password lifetime
+  2 past last login time (inactive account)
+  3 past absolute account lifetime
+  4 exceeded unsuccessful login attempts
+  5 password required and a null password
+  6 admin lock
+  7 password is a *
+</pre>
+<p> So in the case of this example:</p>
+<pre>
+$ sudo /usr/lbin/getprpw walkerja                                       
+ 
+ uid=274, bootpw=NO, audid=232, audflg=1, mintm=-1, maxpwln=-1, exptm=-1, lftm=-1, spwchg=Tue Dec  <br>
+ 9 09:31:14 2014, upwchg=Wed Oct  8 13:38:14 2014, acctexp=-1, llog=-1, expwarn=-1, usrpick=DFT, syspnpw=DFT, <br>
+ rstrpw=DFT, nullpw=DFT, admnum=-1, syschpw=DFT, sysltpw=DFT, timeod=-1, slogint=Tue Dec  9 09:31:14 2014, <br>
+ ulogint=Mon May 11 08:56:50 2015, sloginy=-1, culogin=1, uloginy=-1, umaxlntr=-1, alock=NO, lockout=1100000
+</pre>
+<p> The user account is locked out due to an inactive account</p>
+<h4> Unlocking account</h4>
+<p> If it is locked, then unlock the account (see below)</p>
+<p><code>sudo /usr/lbin/modprpw -k fortunet</code></p>
+<p>This unlocks the account</p>
+
+<p><code>sudo /usr/lbin/getprpw fortunet</code></p>
+<pre>
+uid=139, bootpw=NO, audid=205, audflg=1, mintm=-1, maxpwln=-1, exptm=-1, lftm=-1,
+<br> spwchg=Wed May  6 15:36:01 2015, upwchg=Wed May  6 15:00:14 2015, acctexp=-1,
+<br> llog=-1, expwarn=-1, usrpick=DFT, syspnpw=DFT, rstrpw=DFT, nullpw=DFT, admnum=-1,
+<br>syschpw=DFT, sysltpw=DFT, timeod=-1, slogint=Wed May  6 14:59:32 2015, ulogint
+<br>=Wed May  6 15:57:35 2015, sloginy=-1, culogin=9, uloginy=-1, umaxlntr=-1, alock=NO,
+<br> lockout=0000000
+</pre>
+
+<p>This verifies that the account is now unlocked</p>
+<p> To change the user fortunet's password</p>
+<p><code>sudo passwd fortunet</code></p>
+
+<p>This prompts for a new password twice for the user fortunet</p>
+
+<p>on non-trusted systems (e.g. imsdevqasvmx)</p>
+<p>to unlock an acct:</p>
+<code>passwd -d USERNAME</code> <p>(which deletes the password, meaning they can't log in)</p>
+<p>then</p> 
+<code>passwd USERNAME</code> <p> (To reset their password to something else)</p>
+
+<h4>Disabling/locking a user account</h4>
+<p><code>passwd -l castlebv </code>((l for lock (lowercase) and specify username), then run getprpw to confirm. Lockout value should be "lockout=0000010", which is an admin lockout.</p>
+<pre>
+$ sudo passwd -l castlebv
+$  sudo /usr/lbin/getprpw castlebv
+uid=279, bootpw=NO, audid=243, audflg=1, mintm=-1, maxpwln=-1, exptm=-1, lftm=-1, spwchg=Thu May 28 07:01:51 2015, upwchg=Thu May 28 07:01:18 2015, acctexp=-1, llog=-1, expwarn=-1, usrpick=DFT, syspnpw=DFT, rstrpw=DFT, nullpw=DFT, admnum=-1, syschpw=DFT, sysltpw=DFT, timeod=-1, slogint=Mon Jun  1 17:26:09 2015, ulogint=Mon Jun  1 14:48:25 2015, sloginy=-1, culogin=-1, uloginy=pts/12, umaxlntr=-1, alock=YES, lockout=0000010
+</pre>
+<p>OR</p>
+<p> type in <code>sudo /usr/sbin/smh</code></p>
+<p> type in "u" for Account for Users and Groups, then "l" for Local Users. then select your user.</p>
+<p>Press "m" for modify, then set Account Lifetime to the day before  </p>
+
+<pre> 
+Account Aging Options         : Enable Account Aging ->
+Number of Days of Account Inactivity Allowed    :  -1_________________
+Account Lifetime (mm/dd/yy)                     :  06/17/15___________
+</pre>
+<p>Arrow down to "Modify", then press Enter, then "x" to exit. The user account should now display "Disabled" </p>
+<p class="os"> RedHat Linux</p>
+<h3>Adding user accounts(with home directories at the same time)</h3>
+<p><code>sudo /usr/sbin/useradd --home /home/hogans hogans</code></p>
+<p> The home folder is /home/hogans and the user account that we are adding is hogans</p>
+<p> an ll command yields this: </p>
+<pre>
+drwx------ 16 gonzalan  gonzalan  4096 Mar 20 03:30 gonzalan
+drwx------  3 hogans    hogans    4096 Jul 29 15:58 hogans
+drwx------  3 huffbr    huffbr    4096 Mar 31 04:12 huffbr
+</pre>
+<h3> Changing/Unlocking their Password/Resetting Passwords</h3>
+
+<p><code>sudo passwd hogans</code></p>  
+<h3> See a list of users</h3>
+<p><code>cat /etc/passwrd</code></p> 
+<pre>
+mortonan:x:520:520::/home/mortonan:/bin/bash
+chenl:x:521:521::/home/chenl:/bin/bash
+hogans:x:522:522::/home/hogans:/bin/bash
+phillipsa:x:523:523::/home/phillipsa:/bin/bash
+walkerja:x:524:524::/home/walkerja:/bin/bash
+</pre>  
+<p> The x after the first colon is the password field: it signifies that the actual password is in the /etc/shadow file, which only root can read </p>                       
+<p><code>sudo cat /etc/shadow</code></p> 
+<pre>
+...
+gonzalan:!!$1$sn3h3N/3$WJWiZbw.RKLGMJatZ9mud/:16524:0:99999:7:::
+devarapm:$1$bGt81MbE$vusNOnKn42Eil85CRTJH90:15351:0:99999:7:::
+...
+</pre>
+<p> The ! after the first colon signifies that the account is locked.</p>
+
+<h4>Unlocking an account</h4>
+<p><code>/usr/sbin/usermod -U gonzalan</code></p>
+<h4> Resetting an account password</h4>
+<p><code>passwd gonzalan</code></p>
+<h4> Locking an account</h4>
+<p> <code>sudo passwd -l gonzalan</code> </p>
+<p>User account locked with the -l option can still log in by other methods such as the ssh public key authentication. <br />
+Use the following command to for full account locking:</p>
+<p><code>chage -E 0 gonzalan</code></p>
+
+<h4> Make a RHEL password not expire (or take a VERY long time to expire)</h4>
+<p>per <a href="http://www.cyberciti.biz/faq/linux-howto-check-user-password-expiration-date-and-time/">http://www.cyberciti.biz/faq/linux-howto-check-user-password-expiration-date-and-time/</a></p>
+<p>on SDRBPE01A</p>
+<code>sudo chage -l flftp</code><br>
+<pre>
+Last password change                                    : Jan 25, 2011
+Password expires                                        : never
+Password inactive                                       : never
+Account expires                                         : never
+Minimum number of days between password change          : 0
+Maximum number of days between password change          : 99999
+Number of days of warning before password expires       : 7
+</pre>
+
+<p>on CSEBPE01</p>
+<code>sudo chage -l flftp</code><br>
+<pre>
+Last password change                                    : Dec 01, 2015
+Password expires                                        : Dec 31, 2015
+Password inactive                                       : never
+Account expires                                         : never
+Minimum number of days between password change          : 0
+Maximum number of days between password change          : 30
+Number of days of warning before password expires       : 7
+</pre>
+<p> To make them match (basically never expire)</p>
+<code>sudo chage -M 99999 flftp</code><br> 
+<p>to match SDRBOE01A</p>
+
+<p> Per <a href="http://www.computerhope.com/unix/ups.htm">http://www.computerhope.com/unix/ups.htm</a></p>
+<code>ps -au username</code>
+<p>shows all processes started by that user</>
+<p>There's more on User accounts here:</p>
+<p><a href="file:///W:/Projects/DOR/dorsetup/hpux_config.html#user">file:///W:/Projects/DOR/dorsetup/hpux_config.html#user</a></p>
+<a href="#toc">Back to TOC</a>
+<!-- Groups -->
+<a name="groups"></a>
+<h2> Groups</h2>
+<p class="os">RedHat Linux</p>
+<p> <code>sudo groupadd GROUPNAME</code></p>
+<p> Always check to see what groups the user is currently a member of first, before adding them to new ones.</p>
+<code> groups USERNAME</code>
+
+<h3>Add user to a single, existing group</h3>
+<p><code>usermod -G GROUPNAME hogans</code></p>
+
+<h3>Add user to a multiple, existing groups</h3>
+<p><code>usermod -G GROUPNAME,sales,support hogans</code></p>
+
+<h3>remove users from a group</h3>
+<code>/usr/bin/gpasswd -d antall sysadmins</code><br>
+<p>per <a href ="http://linux.die.net/man/1/gpasswd">http://linux.die.net/man/1/gpasswd</a></p>
+
+<h3>Delete a group</h3>
+<p><code>groupdel GROUPNAME</code></p>
+
+<h3>Confirming group membership</h3>
+<p><code>sudo groups averyd</code></p>
+<pre>
+averyd : averyd servlet_users (she is a member of averyd and servlet_users)
+</pre>
+<p>Or <br />
+<code>cat /etc/group</code></p>
+<p class="os">HP-UX</p>
+<code>sudo /usr/sbin/usermod -G sysadmins marshals</code><br>
+
+<a href="#toc">Back to TOC</a>
+<!-- Sudoers -->
+<a name="sudoers"></a>
+
+<h2>visudo (or safely editing /etc/sudoers file)</h2>
+<p class="os">RedHat Linux</p>
+<p><code>sudo /usr/sbin/visudo</code></p>
+<p> Note: Replace CUSTOMER_ACCTS with the actual customers accounts</p>
+<pre>
+1. modify the /etc/sudoers file to reflect the following changes:
+CUSTOMER_ACCTS ALL=(ALL) ALL,!/bin/su, !/usr/bin/passwd root, !/usr/sbin/visudo, !/bin/*sh
+
+Add entries for users who need to perform functions beyond the capabilities of their basic account. Entries should look like this.
+
+Group
+%sysadmins ALL=(ALL) ALL ,!/bin/su, !/bin/*sh
+
+The purpose of these changes, are to ensure the integrity of our logging of commands issued as super user, <br />and to place an additional safety check on the /etc/sudoers configuration file.
+</pre>
+<p> After modifying the /etc/sudoers file (with visudo, of course), make it so that it can't be changed with chattr.</p>
+<h4>chattr</h4>
+<p>NOTE: This is only for Linux Systems; HP-UX does NOT have an equivalent command.</p>
+<p>chattr for /etc/sudoers file on RHEL systems</p>
+
+<p>This is what happens when you try to edit the sudoers file and chattr has been enabled.</p>
+<pre>
+[vagninib@dorsplnklx ~]$ sudo visudo
+visudo: /etc/sudoers: Permission denied
+visudo: /etc/sudoers: Permission denied
+</pre>
+<p>To disable chattr (making /etc/sudoers editable again)</p>
+<code>sudo chattr -i /etc/sudoers </code><br>
+<p>To re-enable chattr (making /etc/sudoers uneditable (or immutable) again)</p>
+<code>sudo chattr +i /etc/sudoers </code><br>
+
+<h4>Additional resources</h4>
+<p> <a href="http://www.linuxmail.info/how-to-add-remove-user-accounts-centos-5/">Add/Remove User Accounts</a></p>
+<p> <a href="http://linux.die.net/man/1/chattr">chattr</a></p>
+<p class="os"> HP-UX</p>
+
+<p>The task:<br>
+Please create a sudo for the www user account on the IMSDR UNIX server.  David Charles (Charlesd) will need to be added to that group.</p>
+
+<p>sudo /usr/sbin/visudo</p>
+<p>Under ## User alias specification</p>
+add:<br>
+<pre>
+User_Alias      WWW = charlesd 
+</pre>
+<p>Under ## User privilege specification</p>
+add:<br>
+<pre>
+WWW ALL=(www) ALL,!/bin/su, !/bin/*sh
+</pre>
+
+<a href="#toc">Back to TOC</a>
+<!-- Permissions/Ownership -->
+<a name="permown"></a>
+
+
+<h2> Changing Group ownership</h2>
+<p class="os">HP-UX</p>
+<p>sudo chown cssadm:css IMSUPLOAD.XML</p>
+<p> This changes the IMSUPLOAD.XML file from Root being the owner and sys being the group (the defaults when I copied it into the directory), to <br>
+cssadm being the owner and css being the group.</p>
+<pre>
+Before:
+-r-xr-xr-x   1 root       sys          12305 Jun  2 14:18 IMSUPLOAD.XML
+-r-xr-xr-x   1 cssadm     css          10165 Jan 13  2010 IMSUPLOAD.XML.0113
+
+After:
+-r-xr-xr-x   1 cssadm     css          12305 Jun  2 14:18 IMSUPLOAD.XML
+-r-xr-xr-x   1 cssadm     css          10165 Jan 13  2010 IMSUPLOAD.XML.0113
+</pre>
+
+<a href="#toc">Back to TOC</a>
+<!--ACL -->
+<a name="acls"></a>
+
+<h4> ACL's</h4>
+<p class="os">HP-UX</p>
+<p>From <a href="http://nixdoc.net/man-pages/HP-UX/man5/acl.5.html#Access%20Control%20List%20Entries)">http://nixdoc.net/man-pages/HP-UX/man5/acl.5.html#Access%20Control%20List%20Entries)</a>
+<p>getacl -ad /data2</p>
+outputs:
+<pre>
+# file: /data2
+# owner: cssadm
+# group: css
+user::rwx
+group::r-x
+class:r-x
+other:r-x
+</pre>
+<h4>Set ACL on folder mef for user whaleys</h4>
+<p>CD into the /data2/transmissions folder first: You should see the mef folder</p>
+<p>sudo setacl -m user:whaleys:r mef </p>
+<p> To confirm the settings...</p>
+<p> getacl mef</p>
+<pre>
+# file: mef
+# owner: cssadm
+# group: dba
+user::rwx
+user:whaleys:r--
+group::rwx
+class:rwx
+other:rwx
+</pre>
+<p>Resources: <a href="http://docstore.mik.ua/manuals/hp-ux/en/B2355-60130/setacl.1.html">setacl</a></p>
+
+<h4>RBAC</h4>
+<code>sudo vi /etc/rbac/cmd_priv</code><br>
+
+<code>sudo vi /etc/rbac/user_role</code><br>
+<pre>
+root:   Administrator
+proulxd: OpSupportWeb, OpSupportUsers, OpSupportProcesses
+callowad: OpSupportProcesses
+goodmanj: OpSupportProcesses
+williamz: OpSupportProcesses
+huffma: OpSupportProcesses
+averyd: OpSupportProcesses
+hogans: OpSupportProcesses
+forrestp: OpSupportProcesses
+clarkta: OpSupportProcesses  # added her- it worked just fine- DONE
+</pre>
+
+
+<a href="#toc">Back to TOC</a>
+<!--Samba -->
+<a name="smb"></a>
+
+<h4>Samba User Accounts</h4>
+<p class="os"> HP-UX</p>
+
+<h4>Stopping and starting Samba Services</h4>
+<p>Normally, on other Linux systems, you can type in "service samba stop" and that is sufficient. Not in the case of samba services on HP-UX. </p>
+<p> The correct way:</p>
+<code>sudo /opt/samba/bin/stopsmb</code>
+<p>outputs:</p>
+<pre>smbd & nmbd successfully shut down.</pre>
+<code>sudo /opt/samba/bin/startsmb</code>
+<p>outputs:</p>
+
+<pre>smbd & nmbd started successfully; process ids: smbd: 2622, nmbd: 2616.</pre>
+<p> To verify:</p>
+<code>ps -eaf |grep nmbd</code>
+<p>outputs:</p>
+<pre>
+	root  2616     1  0 09:33:23 ?         0:00 /opt/samba/bin/nmbd -D -s /etc/opt/samba/smb.conf
+vagninib  2642  2446  0 09:33:35 pts/1     0:00 grep nmbd
+</pre>
+
+<h4>Adding/viewing Samba users</h4>
+<p> Checking to see if the Unix user has a samba account.</p>
+<code> sudo /opt/samba/bin/pdbedit -L |grep USERNAME</code><br> 
+<p>Adding a new Unix user to samba.</p>
+<code> sudo /opt/samba/bin/pdbedit -a USERNAME</code><br>
+<p> Changing a Samba user's password.</p>
+<code>sudo /opt/samba/bin/smbpasswd USERNAME </code>
+<p>Note: If the user does this, then it's just</p>
+<code> smbpasswd</code> 
+
+<h4>To remove user from Samba database:</h4>
+<code>sudo /opt/samba/bin/pdbedit -x -u USERNAME</code>
+
+<h4>smb.conf file options</h4>
+<code>sudo vi /etc/opt/samba/smb.conf </code>
+<p>outputs: (NOTE: This is not the complete conf file. I cherry picked certain sections to highlight different configuration options)</p>
+<pre>
+[global]
+		workgroup = IMS_GRP
+		server string = Samba %v on ims
+		guest account = cssadm
+		syslog = 0
+		log file = /var/opt/samba/log.%m
+		max log size = 1000
+		os level = 34
+		local master = No
+		admin users = root
+		read only = No
+		create mask = 0764
+		directory mask = 0775
+		hosts allow = 198.56.51., 204.89.122., 192.168.166., 192.168.167., 192.168.165., 204.89.71., 204.89.70., 204.8
+9.73., 204.89.72., 204.89.118., 204.89.116., 204.89.115., 192.168.163.2, 192.168.243., 204.89.86., 204.89.86., 204.89.
+123., 204.89.121., 204.89.67.186, 204.89.67.188, 204.89.67.183, 204.89.88.17, 204.89.67.246, 204.89.124.54, 204.89.124
+.55, 204.89.124.56, 204.89.124.57, 204.89.68.205, 204.89.125.14, 204.89.125.31, 204.89.95., 204.89.64.42, 204.10.14.17
+5, 204.10.14.177, 10.14.157., 10.14.175., 10.14.177., 204.89.110., 10.14.149., 10.14.145., 10.14.147., 10.14.149., 204
+.89.90., 204.89.91., 204.89.111., 10.14.155., 204.89.92., 164.51.27., 204.89.93., 204.89.104., 204.89.108., 204.89.98.
+, 204.89.103., 204.89.109., 204.89.125.25, 204.89.113., 204.89.114., 164.51.96., 164.51.111., 204.89.96., 204.89.84.,
+164.51.140., 204.89.112., 198.56.36., 204.89.100., 164.51.96., 204.89.114., 164.51.108., 204.89.113., 204.89.96., 164.
+51.111., 204.89.84., 164.51.140., 204.89.112., 198.56.39., 10.14.169., 10.14.159., 10.14.167., 10.14.153., 164.51.151.
+, 198.56.49., 164.51.216., 198.56.43., 204.89.92., 164.51.77., 164.51.155., 198.56.40., 204.89.106., 204.89.102., 198.
+56.50., 204.89.101., 164.51.98., 198.56.42., 204.89.90., 201.89.91., 164.51.171., 198.56.49., 204.89.84., 204.89.96.,
+204.89.106., 164.51.218., 198.56.41., 204.89.121., 164.51.3., 198.56.39., 164.51.155., 198.56.41., 164.51.75., 204.89.
+99., 164.51.135., 198.56.48., 198.56.45., 164.51.27., 204.89.94., 164.51.167., 164.51.26.130, 164.51.129., 204.89.105.
+, 192.168.241., 164.51.26., 10.14.139., 10.14.133., 10.14.141.,198.56.44., 204.89.87.51, 205.176.126., 10.14.139.29, 1
+0.14.143.11, 10.14.143.12, 10.14.133.21, 10.14.133.22, 164.51.7.65, 204.89.87.54 
+		preserve case = No
+		short preserve case = No
+		disk quotas = Yes
+		dos filetime resolution = Yes
+
+[homes]
+		comment = Home Directories
+		path = /home
+		browseable = No
+
+[eserv]
+		path = /eserv
+		create mask = 0777
+		directory mask = 0777
+		inherit permissions = Yes
+		hosts allow = 10.14.175.30, 10.14.175.31, 10.14.175.32, 10.14.175.33, 10.14.175.34, 10.14.175.35, 204.89.72.,
+204.89.73., 204.89.71.35, 204.89.71.102, 204.89.118.79, 192.168.166.143, 204.89.67.246, 10.14.155., 10.14.145., 10.14.
+149., 10.14.157., 10.14.133., 10.14.141., 10.14.139.29, 10.14.133.21, 10.14.133.22, 10.14.175.25, 10.14.175.26
+
+[data13]
+		comment = Data 13
+		path = /data13
+		hosts allow = 198.56.51., 10.14.143.11, 204.89.122., 192.168.166., 192.168.167., 192.168.165., 204.89.71., 204
+.89.70., 204.89.73., 204.89.72., 204.89.118., 204.89.116., 204.89.115., 192.168.163.2 (etc)
+</pre>
+<p>An entry in the global section of IP addresses allows the user to view the shares on the samba server; it does NOT explicitly grant them access; THAT is specified in the individaul shares sections.</p>
+<p><code>sudo /opt/samba/bin/testparm</code></p>
+<p> (tool that  very simple test program to check an smbd(8) configuration file) </p>
+<p>can also telnet to the ports in question<br>
+telnet 127.0.0.1 445<br>
+telnet 127.0.0.1 139</p>
+<p> Additional Resources: <a href="http://h30499.www3.hp.com/t5/System-Administration/Configuring-SAMBA-in-HP-UX-11-11-server/td-p/3987419#.VdzA9Zda1BA" >Configuring SAMBA in HP-UX 11.11 server</a></p> 
+
+<h4>Checking to see what version of Samba and what's shared</h4>
+<code>sudo /opt/samba/bin/smbclient -L localhost -U%</code><br>
+<pre>
+Domain=[IMS_GRP] OS=[Unix] Server=[Samba 3.0.30 based HP CIFS Server A.02.04.01]
+
+        Sharename       Type      Comment
+        ---------       ----      -------
+        IPC$            IPC       IPC Service (Samba 3.0.30 based HP CIFS Server A.02.04.01 on ims)
+        eService        Disk      
+        data2_SAMAS     Disk      
+        din             Disk      
+        dataICL         Disk      Data ICL
+        remote_images   Disk      
+        23              Disk      
+        22              Disk      
+        capture         Disk      
+        data4           Disk      
+        ISP_Storage     Disk      
+        Office          Printer   
+        data5           Disk      Data 5
+        data3           Disk      Data 3
+        data13          Disk      Data 13
+        data12          Disk      Data12
+        apache          Disk      Apache HTML
+        cgibin          Disk      Apache executables
+        data15          Disk      Data 15
+        data1           Disk      Data 1
+        data2_mef       Disk      
+        data2           Disk      Data 2
+        data14          Disk      Data 14
+        data6           Disk      Data 6
+        data0           Disk      Data 0
+        tmp             Disk      
+        testmnt         Disk      
+        eserv           Disk      
+Domain=[IMS_GRP] OS=[Unix] Server=[Samba 3.0.30 based HP CIFS Server A.02.04.01]
+
+        Server               Comment
+        ---------            -------
+        IMS                  Samba 3.0.30 based HP CIFS Server A.02.04.01 on 
+
+        Workgroup            Master
+        ---------            -------
+        IMS_GRP              
+
+</pre>
+
+
+ <p>There's more on Samba here:</p>
+ <p><a href="file:///W:/Projects/DOR/dorsetup/hpux_config.html#smb">file:///W:/Projects/DOR/dorsetup/hpux_config.html#smb</a></p>
+<a href="#toc">Back to TOC</a>
+<!-- Services -->
+<a name="services"></a>
+
+<h2>Services running (similar to running netstat?)</h2>
+<p><code>sudo lsof -i</code><br> NOTE: lsof needs to be installed on the HP-UX systems.</p>
+<pre>
+COMMAND     PID     USER   FD   TYPE   DEVICE SIZE/OFF NODE NAME
+portreser  3488     root    5u  IPv4    21467      0t0  UDP *:ipp 
+rpcbind    3591      rpc    6u  IPv4    21822      0t0  UDP *:sunrpc 
+rpcbind    3591      rpc    7u  IPv4    21824      0t0  UDP *:798 
+rpcbind    3591      rpc    8u  IPv4    21825      0t0  TCP *:sunrpc (LISTEN)
+rpcbind    3591      rpc    9u  IPv6    21827      0t0  UDP *:sunrpc 
+rpcbind    3591      rpc   10u  IPv6    21829      0t0  UDP *:798 
+rpcbind    3591      rpc   11u  IPv6    21830      0t0  TCP *:sunrpc (LISTEN)
+rpc.statd  3753  rpcuser    5u  IPv4    22201      0t0  UDP localhost:961 
+rpc.statd  3753  rpcuser    8u  IPv4    22211      0t0  UDP *:62002 
+rpc.statd  3753  rpcuser    9u  IPv4    22215      0t0  TCP *:46836 (LISTEN)
+rpc.statd  3753  rpcuser   10u  IPv6    22219      0t0  UDP *:25491 
+rpc.statd  3753  rpcuser   11u  IPv6    22223      0t0  TCP *:46060 (LISTEN)
+tnslsnr    4005   oracle    9u  IPv6 22737514      0t0  TCP *:ncube-lm (LISTEN)
+snmpd      4019     root    8u  IPv4    23561      0t0  UDP *:snmp 
+snmpd      4019     root    9u  IPv4    23563      0t0  TCP localhost:smux (LISTEN)
+sshd       4034     root    3u  IPv4    23606      0t0  TCP *:ssh (LISTEN)
+sshd       4034     root    4u  IPv6    23615      0t0  TCP *:ssh (LISTEN)
+ntpd       4057      ntp   16u  IPv4    23674      0t0  UDP *:ntp 
+ (etc.)
+</pre>
+
+<a href="#toc">Back to TOC</a>
+<!-- Network -->
+<a name="net"></a>
+
+<h2> Network configuration</h2>
+<p class="os"> RedHat Linux</p>
+
+<p>sudo /usr/sbin/system-config-network</p>
+<p>This brings up a text-based configuration utility that you can configure IP settings etc for all interfaces in the machine. Typically, we want eth0. </p> 
+<p> then do a "sudo service network restart"</p>
+
+<p>Path to network configuration files (to confirm that the above changes actually worked) </p>
+<p>/etc/sysconfig/network-scripts/</p>
+<p> cat ifcfg-eth0</p>
+<pre>
+DEVICE=eth0
+HWADDR=00:17:a4:77:60:1e
+TYPE=Ethernet
+UUID=f75aa027-0106-4140-b5fb-38e8baa81c56
+ONBOOT=yes
+NM_CONTROLLED=yes
+BOOTPROTO=none
+IPADDR=192.168.162.12
+NETMASK=255.255.255.192
+DNS2=204.89.74.18
+GATEWAY=192.168.162.1
+DNS1=204.89.74.180
+IPV6INIT=no
+USERCTL=no
+
+</pre>
+
+<code>sudo /bin/vi ifcfg-eth0</code><br>
+<code>sudo /ip route add 204.89.125.202/25 via 204.89.125.1</code><br>
+<code>sudo /ip route add 204.89.125.202 netmask 255.255.255.128 via 204.89.125.129 eth0</code><br>
+<pre>
+sudo /ip route add 204.89.125.202 netmask 255.255.255.128 via 204.89.125.129 eth0
+                     new_server_ip       new_server_subnet   new_server_gateway_ip   interface     
+</pre>
+
+<p> For more info:</p>
+<a href="https://access.redhat.com/documentation/en-US/Red_Hat_Enterprise_Linux/6/html/Deployment_Guide/s1-networkscripts-interfaces.html">Man Page for Networking</a>
+<br />
+
+<h4>NIC failover on RHEL</h4>
+
+<p>related article (diff between eth0 and em0)</p>
+<p> Per <a href="http://www.slashroot.in/how-convert-em0-eth0-centos-6-and-rhel-6">http://www.slashroot.in/how-convert-em0-eth0-centos-6-and-rhel-6</a></p>
+
+<h4> Configuration</h4>
+<p>Run the following to make sure the NetworkManager is off (if it was installed):<p/>
+
+   <code>service NetworkManager stop</code><br>
+   <code>chkconfig NetworkManager off</code>
+
+<p> Add bonding to modprobe:</p>
+
+  <code> echo "alias bond0 bonding" > /etc/modprobe.d/bonding.conf</code>
+
+<p>Create the following files in /etc/sysconfig/network-scripts:</p>
+
+ <code> sudo vi /etc/sysconfig/network-scripts/ifcfg-bond0 </code>
+<pre>
+   DEVICE="bond0"
+   NM_CONTROLLED="no"
+   ONBOOT="yes"
+   IPADDR="192.168.36.36"
+   NETMASK="255.255.255.0"
+   NETWORK="192.168.36.0"
+   GATEWAY="192.168.36.1"
+   BONDING_OPTS="miimon=1000 mode=active-backup"
+</pre>
+
+<code>sudo vi /etc/sysconfig/network-scripts/ifcfg-em1 </code>>
+<pre>
+DEVICE="em1"
+BOOTPROTO=static
+ONBOOT=yes
+MASTER=bond0
+SLAVE=yes
+USERCTL=no
+</pre>
+
+<code>sudo vi /etc/sysconfig/network-scripts/ifcfg-em2</code>
+<pre>
+DEVICE="em2"
+BOOTPROTO=static
+ONBOOT=yes
+MASTER=bond0
+SLAVE=yes
+USERCTL=no
+</pre>
+     
+<code>service network restart</code>
+
+<h4> Testing the failover</h4>
+<p>It appears to be using em2 as the active device, so you might be able to do a </p>
+
+<code>ifconfig em2 down</code>
+
+<p>and see if it fails over to em1 and keeps working.  If it does, then doing a</p>
+
+<code>ifconfig em2 up</code>
+
+<p>should put it back the way it was.</p>
+
+<h4>If it's working properly</h4>
+<p>Here is what you get when you do an ifconfig and the NIC bonding worked.</p>  
+<pre>
+[root@atllxtiv01-dr network-scripts]# ifconfig
+bond0     Link encap:Ethernet  HWaddr 14:18:77:62:D0:CE  
+          inet addr:192.168.36.62  Bcast:192.168.36.255  Mask:255.255.255.0
+          inet6 addr: fe80::1618:77ff:fe62:d0ce/64 Scope:Link
+          UP BROADCAST RUNNING MASTER MULTICAST  MTU:1500  Metric:1
+          RX packets:19961 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:5684 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:0 
+          RX bytes:6068261 (5.7 MiB)  TX bytes:2310660 (2.2 MiB)
+
+em1       Link encap:Ethernet  HWaddr 14:18:77:62:D0:CE  
+          UP BROADCAST RUNNING SLAVE MULTICAST  MTU:1500  Metric:1
+          RX packets:37 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1000 
+          RX bytes:6339 (6.1 KiB)  TX bytes:0 (0.0 b)
+          Interrupt:41 
+
+em2       Link encap:Ethernet  HWaddr 14:18:77:62:D0:CE  
+          UP BROADCAST RUNNING SLAVE MULTICAST  MTU:1500  Metric:1
+          RX packets:51 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:32 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1000 
+          RX bytes:7697 (7.5 KiB)  TX bytes:3382 (3.3 KiB)
+          Interrupt:45 
+
+lo        Link encap:Local Loopback  
+          inet addr:127.0.0.1  Mask:255.0.0.0
+          inet6 addr: ::1/128 Scope:Host
+          UP LOOPBACK RUNNING  MTU:65536  Metric:1
+          RX packets:14 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:14 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:0 
+          RX bytes:3144 (3.0 KiB)  TX bytes:3144 (3.0 KiB)
+</pre>
+
+
+
+<p class="os"> HP-UX</p>
+<p>For HP-UX Network Configuration, go to <a href="DOR/dorsetup/hpux_config.html#network">HP-UX Network Configuration</a>.</p>
+
+<a href="#toc">Back to TOC</a>
+
+
+<!-- DNS -->
+<a name="dns"></a>
+<h2> DNS</h2>
+<p class="os">RedHat Linux </p>
+<h3>Updating DNS server records with the new server IP</h3>
+<pre>
+[vagninib@rmdbx ~]$ sudo /usr/bin/nsupdate
+
+> update delete rmdbx.fdor.dor.state.fl.us A
+> update add rmbdx.fdor.dor.state.fl.us 86400 A 192.168.162.12
+> send
+</pre>
+<p> via <a href="http://linux.die.net/man/8/nsupdate"> Man page for nsupdate</a></p>
+
+<h3>Verifying DNS changes via dig</h3>
+<p>dig statsdbx.fdor.dor.state.fl.us</p>
+<pre>
+; <<>> DiG 9.8.2rc1-RedHat-9.8.2-0.37.rc1.el6_7.2 <<>> statsdbx.fdor.dor.state.fl.us
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 59435
+;; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 0
+
+;; QUESTION SECTION:
+;statsdbx.fdor.dor.state.fl.us. IN      A
+
+;; ANSWER SECTION:
+statsdbx.fdor.dor.state.fl.us. 28800 IN A       192.168.162.24
+
+;; Query time: 1 msec
+;; SERVER: 204.89.74.180#53(204.89.74.180)
+;; WHEN: Mon Aug  3 16:00:42 2015
+;; MSG SIZE  rcvd: 63
+</pre>
+<p> Look for the answer section: You can also specify "dig statsdbx.fdor.dor.state.fl.us +noall +answer"</p>
+<pre>
+; <<>> DiG 9.8.2rc1-RedHat-9.8.2-0.37.rc1.el6_7.2 <<>> statsdbx.fdor.dor.state.fl.us +noall +answer
+;; global options: +cmd
+statsdbx.fdor.dor.state.fl.us. 28800 IN A       192.168.162.24
+</pre>
+
+<p> via <a href="http://www.thegeekstuff.com/2012/02/dig-command-examples/"> Man page for dig</a></p>
+
+<a href="#toc">Back to TOC</a>
+<!--Firewall (IPF) -->
+<a name="fw"></a>
+
+<h4>IPF Firewall</h4>
+<p class="os">HP-UX</p>
+<p>per <a href="http://h30499.www3.hp.com/t5/System-Administration/How-disable-ipfilter-on-hp-ux-11-31/td-p/4757124#.VSvt0JPGqXc">http://h30499.www3.hp.com/t5/System-Administration/How-disable-ipfilter-on-hp-ux-11-31/td-p/4757124#.VSvt0JPGqXc</a>
+<br>Adding to JRF, the exact file on HPUX 11.31 on any environment would be <strong>/etc/rc.config.d/ipfconf..... </strong>
+You will see one control variable called as IPF_START, setting it to 0 would mean disabling it. 
+Most probably you will see 1 on that field from the output you have shown. The startup script looks like 
+/sbin/init.d/ipfboot which would check the file /etc/rc.config.d/ipfconf at the time of boot which is what 
+enables or disables your IP Filter service!. </p>
+<p> Sample IPF conf file</p>
+<pre>
+$ more ipfconf
+#
+# Directory where IP Filter configuration files are kept
+#
+IPF_CONFDIR=/etc/opt/ipf
+#
+# Packet filtering configuration file
+#
+IPF_CONF=${IPF_CONFDIR}/ipf.conf
+#
+# Packet filtering configuration file for IPv6
+#
+IPF6_CONF=${IPF_CONFDIR}/ipf6.conf
+#
+# Network address translation configuration file
+#
+IPNAT_CONF=${IPF_CONFDIR}/ipnat.conf
+#
+# Load the ipfilter module ?
+# 1 = Start, 0 = Do not start
+#
+IPF_START=0
+</pre>
+<p class="os">RedHat Linux</p>
+<h2> IPTables</h2>
+<h3>Modifying IPTables </h3>
+<p><code>sudo /usr/sbin/system-config-firewall</code></p>
+<p>This brings up a text-based configuration utility that you can configure firewall settings for the machine. </p> 
+<p> To confirm the changes</p>
+<p> <code>sudo vi /etc/sysconfig/iptables</code></p>
+<pre>
+# Firewall configuration written by system-config-firewall
+# Manual customization of this file is not recommended.
+*filter
+:INPUT ACCEPT [0:0]
+:FORWARD ACCEPT [0:0]
+:OUTPUT ACCEPT [0:0]
+-A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+-A INPUT -p icmp -j ACCEPT
+-A INPUT -i lo -j ACCEPT
+-A INPUT -m state --state NEW -m tcp -p tcp --dport 22 -j ACCEPT
+-A INPUT -m state --state NEW -m tcp -p tcp --dport 25 -j ACCEPT
+-A INPUT -m state --state NEW -m tcp -p tcp --dport 1158 -j ACCEPT
+-A INPUT -m state --state NEW -m tcp -p tcp --dport 1521 -j ACCEPT
+-A INPUT -m state --state NEW -m tcp -p tcp --dport 1630 -j ACCEPT
+-A INPUT -m state --state NEW -m tcp -p tcp --dport 7937 -j ACCEPT
+-A INPUT -m state --state NEW -m tcp -p tcp --dport 7938 -j ACCEPT
+-A INPUT -j REJECT --reject-with icmp-host-prohibited
+-A FORWARD -j REJECT --reject-with icmp-host-prohibited
+COMMIT
+</pre>
+<p> For more info:</p>
+<a href="http://www.centos.org/docs/5/html/Deployment_Guide-en-US/ch-iptables.html">Man Page for IPTables</a>
+
+<h4>Stop/Start IPTables FW</h4>
+<p><em>(via http://www.ehowstuff.com/how-to-disable-firewall-on-rhel-6/ and 
+https://access.redhat.com/documentation/en-US/Red_Hat_Enterprise_Linux/4/html/System_Administration_Guide/s1-fireall-ipt-act.html)</em></p>
+
+<code>>sudo /sbin/service iptables save<br>
+ sudo /sbin/service iptables stop<br>
+sudo /sbin/service ip6tables save<br>
+sudo /sbin/service ip6tables stop<br>
+sudo /sbin/service iptables start</code><br>
+To ensure that iptables starts when the system is booted, use the following command:<br>
+<code>chkconfig --level 345 iptables on </code></p>
+
+<p>OR </p>
+<h3> Starting/stopping IPTables</h3>
+<p> <code>sudo /etc/init.d/iptables start</code></p>
+<p>outputs "iptables: Applying firewall rules:   "</p>
+<h3>Verifying that IPTables is running</h3>
+<p> <code>sudo iptables -L</code></p>
+<pre>
+Chain INPUT (policy ACCEPT)
+target     prot opt source               destination         
+ACCEPT     all  --  anywhere             anywhere            state RELATED,ESTABLISHED 
+ACCEPT     icmp --  anywhere             anywhere            
+ACCEPT     all  --  anywhere             anywhere            
+ACCEPT     tcp  --  anywhere             anywhere            state NEW tcp dpt:ssh 
+ACCEPT     tcp  --  anywhere             anywhere            state NEW tcp dpt:smtp 
+ACCEPT     tcp  --  anywhere             anywhere            state NEW tcp dpt:dbcontrol-oms 
+ACCEPT     tcp  --  anywhere             anywhere            state NEW tcp dpt:ncube-lm 
+ACCEPT     tcp  --  anywhere             anywhere            state NEW tcp dpt:oraclenet8cman 
+ACCEPT     tcp  --  anywhere             anywhere            state NEW tcp dpt:7937 
+ACCEPT     tcp  --  anywhere             anywhere            state NEW tcp dpt:7938 
+REJECT     all  --  anywhere             anywhere            reject-with icmp-host-prohibited 
+
+Chain FORWARD (policy ACCEPT)
+target     prot opt source               destination         
+REJECT     all  --  anywhere             anywhere            reject-with icmp-host-prohibited 
+
+Chain OUTPUT (policy ACCEPT)
+target     prot opt source               destination         
+</pre>
+
+<a href="#toc">Back to TOC</a>
+<!--symbolic links-->
+<a name="symlinks"></a>
+
+<h2> Symbolic links</h2>
+<p>ln -s u01/lamother  /lamother
+<p>ls -l</p>
+<pre>
+lrwxrwxrwx.    1 root   root    13 Sep 17 09:40 lamother -> /u01/lamother
+</pre>
+
+<a href="#toc">Back to TOC</a>
+<!--Migrating to new server -->
+<a name="migrate"></a>
+
+<h2>Migrating to a new server</h2>
+<p class="os">HP-UX</p>
+<p>Do this process for /etc/passwd, /etc/group, /etc/shadow (if applicable) & 
+<br>/etc/sudoers (which is really at /opt/iexpress/sudo/etc/sudoers and /tcb/files/auth (for HP-UX Trusted systems)</p>
+
+<p>(via http://linux.die.net/man/1/tar  and http://linux.die.net/man/1/tar)</p>
+
+<code>sudo /sbin/tar -crvf passwd.tar /etc/passwd </code>
+<p>then use scp<br>
+<code>sudo /usr/bin/scp  -p -v /passwd.tar  vagninib@new.server.address:~/passwd.tar </code></p>
+<p>open another session to the new server<br>
+<code>sudo /usr/sbin/visudo or sudo vi /etc/passwd</code> or whatever the actual file is that you are moving/replacing<br>
+<em>(leave this open just in case you screw something up and lock yourself out of being able to fix it)</em></p>
+<p>then restore the file <em>(via http://www.tecmint.com/18-tar-command-examples-in-linux/)</em><br>
+<code>sudo /sbin/tar xvf passwd.tar</code><br> 
+(puts it right where it's supposed to go...in /etc)</p>
+<p>sign out of both windows (after confirming that the replacement worked)<br>
+(this is because you signed in under one UID, then replaced who that UID belonged to)</p>
+
+<p>sign back in (run whoami to confirm)</p>
+
+<p>repeat for /etc/group</p>
+<p><strong>For Sudoers file</strong></p>
+<code>sudo /sbin/tar -crvf sudoers.tar /opt/iexpress/sudo/etc/sudoers<br>
+cp /etc/sudoers.tar ~/sudoers.tar</code>
+
+<code>sudo /usr/bin/scp -p -v sudoers.tar vagninib@new.server.address:~/sudoers.tar<br>
+sudo /sbin/tar xvf sudoers.tar</code>
+
+<p><strong>For Trusted systems (HP-UX only)</strong></p>
+<code>sudo /sbin/tar -crvf auth.tar /tcb/files/auth/  # on old server</code>
+<code>sudo cp -rP /tcb/files/auth /tcb/files/auth102215  # on new server- just in case</code>
+(cp switches via http://www.unix.com/hp-ux/250653-recursive-copy-folders-files.html<br>
+<code>sudo /sbin/tar xvf auth.tar</code><br>
+
+<h4>Using SCP to copy a config file from a remote server to the local host</h4>
+<p>(from <a href="http://www.hypexr.org/linux_scp_help.php">http://www.hypexr.org/linux_scp_help.php</a> first example)</p>
+<p>Must be in the local folder where the file is located</p>
+<code>sudo scp vagninib@sunrisetst.dor.state.fl.us:/etc/snmp/snmpd.conf /etc/snmp/ </code><br>
+<p>Explanation: sudo scp user@remote host:/path/to/filename.conf   /local/current_dir</p>
+<p>(one space between remote  host/path and localpath)</p>
+
+<code>sudo /usr/bin/scp vagninib@ims.fdor.dor.state.fl.us:/tcb/files/auth/ /tcb/files/auth/</code><br>
+<p> try</p> 
+<code>sudo /usr/bin/rsync -arvl  -e ssh vagninib@192.168.166.201:/home/servlet/*.* /home/servlet</code>
+<p>ran above from sunrisedevx (new server)</p>
+
+<p>or this</p>
+<pre>
+sudo /usr/bin/scp /work/alvisro -r -p -v garnettr@csebpe01:/work/alvisro
+                  from /path/to/folder on sdrbpe01a (old)   to user@remote_server:/path/to/folder (new)
+				  </pre>
+<p> via <a href="http://linux.die.net/man/1/scp">http://linux.die.net/man/1/scp</a></p>
+<p>-p' Preserves modification times, access times, and modes from the original file. <br>
+-r' Recursively copy entire directories. Note that scp follows symbolic links encountered in the tree traversal.<br> 
+-v' Verbose mode. Causes scp and ssh(1) to print debugging messages about their progress. <br>
+This is helpful in debugging connection, authentication, and configuration problems.</p>
+
+
+
+<a href="#toc">Back to TOC</a>
+
+<!--Rsync -->
+<a name="rsync"></a>	
+<h2>Rsync</h2>
+<p><a href="http://www.computerhope.com/unix/rsync.htm">http://www.computerhope.com/unix/rsync.htm </a> (this is 72 pages in length (printed), but seems VERY thorough...)</p>
+<code> sudo /usr/bin/rsync -a -A -r -vv -e ssh root@ims:/data2/bkv_rsync_test /data2/ </code><br>
+<pre>
+BREAKDOWN OF COMMAND
+ /usr/bin/rsync is the path and command  
+-a is archive
+-A means preserve permissions
+-r is recursive 
+-vv is very verbose 
+-e ssh  means what protocol to use
+root@ims means user account to use (using an ssh key between IMSx (client) and IMS (server))
+:/data2/bkv_rsync_test is source
+/data2/ is destination (WARNING: if the destination is the same as the source (e.g. /data2/bkv_rsync_test), then rsync will copy 
+the bkv_rsync_test folder INSIDE of the /data2/bkv_rsync_test folder (resulting in /data2/bkv_rsync_test/bkv_rsync_test , which is wrong...)
+
+There is also a --delete option which means if target file doesn't exist on source anymore, then delete it from destination (allows for file deletions to replicate to destination)
+NOTE: be VERY careful of the --delete option as it can completely hose your brand new server in about 30 seconds...
+</pre>
+
+<p><strong>This is what happened when I wasn't careful with --delete</strong</p>>
+<p> the command: sudo /usr/bin/rsync -a -A -r -vv -e ssh --delete root@ims:/tartan/ / </p>
+<p> the result</p>
+<pre>
+deleting u02/stage/database/stage/Actions/generalActions/10.2.0.9.0/1/
+deleting u02/stage/database/stage/Actions/generalActions/10.2.0.9.0/
+deleting u02/stage/database/stage/Actions/generalActions/
+deleting u02/stage/database/stage/Actions/fileActions/11.2.0.2.0/1/fileActionLib.jar
+deleting u02/stage/database/stage/Actions/fileActions/11.2.0.2.0/1/
+deleting u02/stage/database/stage/Actions/fileActions/11.2.0.2.0/
+and so on...(sad face)
+</pre>
+
+<h3>Pulling files to IMSx from IMS</h3>
+
+<p> The SETUP</p>
+<h4>Creating an SSH key</h4>
+<p><a href="http://www.unix.com/hp-ux/32474-ssh-without-password.html">http://www.unix.com/hp-ux/32474-ssh-without-password.html</a></p>
+<p>on IMSx</p> 
+<code># ssh-keygen -t dsa -f $HOME/.ssh/id_dsa -P ''</code><br>
+<pre>
+Generating public/private dsa key pair.
+Your identification has been saved in /root/.ssh/id_dsa.
+Your public key has been saved in /root/.ssh/id_dsa.pub.
+The key fingerprint is:
+32:c8:5a:27:16:1d:7a:95:1c:50:f7:a2:3a:7d:9f:ca root@IMSx
+The key's randomart image is:
++--[ DSA 1024]----+
+|      o++o.      |
+|     o oo. .     |
+|    o o   . .    |
+|   . +   . .     |
+|    * + S        |
+|   + o =         |
+|  .   o . .      |
+|       . o . .   |
+|          E.o    |
++-----------------+
+# 
+</pre>
+<p>on IMS</p>
+<code> cat /root/id_dsa.pub >> $HOME/.ssh/authorized_keys</code><br>
+
+<p>Testing the process (as root)</p>
+<code> /usr/bin/rsync -a -A -vv -e ssh --ignore-existing  --dry-run root@ims:/tartan/ /u03/lv_tartan</code><br>
+
+<p> Actual running of the process</p>
+<code>/usr/bin/rsync -a -A -vv -e ssh --ignore-existing  root@ims:/dataICL/ /u04/lv_dataICL</code>
+
+<p> I built a shell script (rsync_from_ims.sh in /root/scripts)</p>
+<pre>
+#!/bin/sh
+/usr/bin/rsync -a -A -v -e ssh --ignore-existing  root@ims:/dataICL/ /u04/lv_dataICL
+/usr/bin/rsync -a -A -v -e ssh --ignore-existing  root@ims:/data7/ /u04/lv_data7
+/usr/bin/rsync -a -A -v -e ssh --ignore-existing  root@ims:/data6/ /u04/lv_data6
+etc....
+</pre>
+
+<h4> Running the rsync process manually</h4>
+<code>chmod 755 rsync_from_ims.sh</code><br>
+<code>./root/scripts/rsync_from_ims.sh</code><br>
+
+<a href="#toc">Back to TOC</a>
+
+<!--Renaming a server -->
+<a name="rename"></a>	
+<h2>Renaming a server</h2>
+<p>rename IMSDev and IMSDevx</p>
+<pre>
+before:
+IMSDEV- 192.168.163.4 
+IMSDEVx- 192.168.162.62
+</pre>
+
+<p>on .162.62</p>
+<pre>
+HOSTNAME="imsdevx"
+OPERATING_SYSTEM=HP-UX
+LOOPBACK_ADDRESS=127.0.0.1
+
+INTERFACE_NAME[0]="lan0"
+IP_ADDRESS[0]="192.168.162.62"
+SUBNET_MASK[0]="255.255.255.192"
+BROADCAST_ADDRESS[0]=""
+INTERFACE_STATE[0]=""
+DHCP_ENABLE[0]="0"
+INTERFACE_MODULES[0]=""
+INTERFACE_SKIP[0]=""
+
+INTERFACE_NAME[1]="lan1"
+IP_ADDRESS[1]="10.201.9.202"
+SUBNET_MASK[1]="255.255.254.0"
+BROADCAST_ADDRESS[1]=""
+INTERFACE_STATE[1]=""
+DHCP_ENABLE[1]="0"
+INTERFACE_MODULES[1]=""
+INTERFACE_SKIP[1]=""
+
+# Internet routing configuration.  See route(1m), routing(7)
+#
+# ROUTE_DESTINATION:  Destination host or network IP address in decimal-dot
+#                     notation, or hostname (in /etc/hosts) or network name
+IP_ADDRESS[0]="192.168.162.62"
+SUBNET_MASK[0]="255.255.255.192"
+BROADCAST_ADDRESS[0]=""
+INTERFACE_STATE[0]=""
+DHCP_ENABLE[0]="0"
+INTERFACE_MODULES[0]=""
+INTERFACE_SKIP[0]=""
+
+INTERFACE_NAME[1]="lan1"
+IP_ADDRESS[1]="10.201.9.202"
+SUBNET_MASK[1]="255.255.254.0"
+BROADCAST_ADDRESS[1]=""
+INTERFACE_STATE[1]=""
+DHCP_ENABLE[1]="0"
+INTERFACE_MODULES[1]=""
+INTERFACE_SKIP[1]=""
+</pre>
+<p>on .163.4</p>
+<pre>
+HOSTNAME="imsdev"
+OPERATING_SYSTEM=HP-UX
+LOOPBACK_ADDRESS=127.0.0.1
+
+INTERFACE_NAME[0]=lan0
+IP_ADDRESS[0]=192.168.163.4
+SUBNET_MASK[0]=
+BROADCAST_ADDRESS[0]=""
+INTERFACE_STATE[0]=""
+DHCP_ENABLE[0]=0
+INTERFACE_MODULES[0]=""
+
+
+after:
+IMSDEV- 192.168.162.62
+IMSDevold- 192.168.163.4 
+</pre>
+<p>Changes:</p>
+<p>per <a href="http://www.unix.com/unix-for-dummies-questions-and-answers/25805-how-do-you-rename-server-hp-ux.html">http://www.unix.com/unix-for-dummies-questions-and-answers/25805-how-do-you-rename-server-hp-ux.html</a></p>
+<code>sudo vi /etc/rc.config.d/netconf</code><br>
+
+<code>sudo vi /etc/hosts</code><br>
+
+<p>To verify:</p>
+<code>hostname</code><br>
+
+<p>Sign into DOR host (after DNS change has been made)</p>
+<code>nslookup</code><br> 
+
+<p> After renaming (on IMSDev and IMS)</p>
+<p>sign in as root </p>
+<p>cd to /data5/imsdev/bin/hpux/</p>
+<code>./profiled & </code><br>
+<p>(scripted this at /root/scripts/start_profiled.sh)</p>
+<code>/opt/apache/bin/apachectl start</code><br>
+<p>contents of /root/scripts/start_profiled.sh</p>
+<pre>
+cd /data5/imsdev/bin/hpux/
+./profiled &
+</pre>
+<p>to run:</p>
+<pre>
+./root/scripts/start_profiled.sh  
+(as of 1:24 PM 4/4/2016, script wasn't executable- changed it to 755)
+</pre>
+
+<p>autostart this script on reboot:</p>
+<p> per <a href="http://unix.stackexchange.com/questions/7793/bash-script-on-startup-linux">http://unix.stackexchange.com/questions/7793/bash-script-on-startup-linux</a></p>
+
+<a href="#toc">Back to TOC</a>
+<!--Known Issues -->
+<a name="known"></a>	
+<h2>Known Issues</h2>
+<h3>DOR</h3>
+<h4>Access Denied (on HP-UX systems)</h4>
+<p> Make sure that their account isn't locked. (See also <a href="#user">Users)</a></p>
+<code>sudo /usr/lbin/getprpw USERNAME</code>
+<p> If their account is unlocked, verify that their home folder exists (as listed in /etc/passwd) and that the permissions are correct.</p>
+<code> grep USERNAME /etc/passwd</code>
+<p> Next, verify that the patch to their default shell is correct (also listed in the above command)</p>
+<p> For users that use the TCSH shell, the proper path should be /usr/local/bin/tcsh</p>
+<p> For new server installations, ensure that the tcsh shell is actually installed. (See <a href="file:///W:/Projects/DOR/dorsetup/hpux_config.html#userS">User Accounts)</a></p>
+<h4>WebHeader (for printers on Sunrise)</h4>
+<code>sudo /etc/init.d/cups restart</code>
+<p> You may also need to restart the Apache server on Sunrise as well (at this time, not exactly sure how that ties in)</p>
+<p>This is the URL that they go to to launch this stuff</p>
+<a href="http://ims/sysAdmDocs/WebStartApps/WebApps.html">WebApps</a>
+
+<p>The URL they are using to log in is:</p>
+<p><a href="http://sunrise.dor.state.fl.us:7778/etape/">http://sunrise.dor.state.fl.us:7778/etape/</a></p>
+<p>The user list is provided through AD (Kat is the contact for the username list- she is able to restart the etape service on her end, which fixed the issue in this case)</p>
+<br>
+<code> /etc/init.d/httpd restart </code>
+<br>
+<code> /etc/init.d/httpd start </code>
+<br>
+<code> /etc/init.d/httpd stop </code>
+
+<h4> Looking at the printer queues for Webheader issue</h4>
+
+<code>[vagninib@sunrise dev]$ cat /etc/printcap</code>
+<pre>
+# This file was automatically generated by cupsd(8) from the
+# /etc/cups/printers.conf file.  All changes to this file
+# will be lost.
+P1C|Created by redhat-config-printer 0.6.x:rm=sunrise.dor.state.fl.us:rp=P1C:  # This is one we're concerned with
+AM5611|GTA15611B:rm=sunrise.dor.state.fl.us:rp=AM5611:
+AM5651|GTA15651A:rm=sunrise.dor.state.fl.us:rp=AM5651:
+AM5652|GTA15652B:rm=sunrise.dor.state.fl.us:rp=AM5652:
+AM5661|GTA15661A:rm=sunrise.dor.state.fl.us:rp=AM5661:
+AM5763|GTA15763A:rm=sunrise.dor.state.fl.us:rp=AM5763:
+AM5816|GTA15816A:rm=sunrise.dor.state.fl.us:rp=AM5816:
+AM5830|GTA15830B:rm=sunrise.dor.state.fl.us:rp=AM5830:
+AM5836|GTA15836A:rm=sunrise.dor.state.fl.us:rp=AM5836:
+AM5846|GTA15846A:rm=sunrise.dor.state.fl.us:rp=AM5846:
+AM5847|GTA15847C:rm=sunrise.dor.state.fl.us:rp=AM5847:
+AM5847B|GTA15847B:rm=sunrise.dor.state.fl.us:rp=AM5847B:
+CAMS|Created by redhat-config-printer 0.6.x:rm=sunrise.dor.state.fl.us:rp=CAMS:
+CCOC1|GTA1255A:rm=sunrise.dor.state.fl.us:rp=CCOC1:
+CCOC4|HP Laserjet P4015x:rm=sunrise.dor.state.fl.us:rp=CCOC4:
+CCOC5|Dell 5130cdn color printer:rm=sunrise.dor.state.fl.us:rp=CCOC5:
+DR1|Created by redhat-config-printer 0.6.x:rm=sunrise.dor.state.fl.us:rp=DR1:
+DR11|Created by redhat-config-printer 0.6.x:rm=sunrise.dor.state.fl.us:rp=DR11:
+DR219|Created by redhat-config-printer 0.6.x:rm=sunrise.dor.state.fl.us:rp=DR219:
+ESTAX|Created by redhat-config-printer 0.6.x:rm=sunrise.dor.state.fl.us:rp=ESTAX:
+ESTAX2|Created by redhat-config-printer 0.6.x:rm=sunrise.dor.state.fl.us:rp=ESTAX2:
+ESTAX3|Created by redhat-config-printer 0.6.x:rm=sunrise.dor.state.fl.us:rp=ESTAX3:
+ESTAX4|Created by redhat-config-printer 0.6.x:rm=sunrise.dor.state.fl.us:rp=ESTAX4:
+IMG1|Xerox Phaser 3250:rm=sunrise.dor.state.fl.us:rp=IMG1:
+L_incom|Created by redhat-config-printer 0.6.x:rm=sunrise.dor.state.fl.us:rp=L_incom:
+LBW1|Created by redhat-config-printer 0.6.x:rm=sunrise.dor.state.fl.us:rp=LBW1:
+Local|Local:rm=sunrise.dor.state.fl.us:rp=Local:
+P2C|Created by redhat-config-printer 0.6.x:rm=sunrise.dor.state.fl.us:rp=P2C:
+P3C|Created by redhat-config-printer 0.6.x:rm=sunrise.dor.state.fl.us:rp=P3C:
+P4C|Created by redhat-config-printer 0.6.x:rm=sunrise.dor.state.fl.us:rp=P4C:
+PTO|Created by redhat-config-printer 0.6.x:rm=sunrise.dor.state.fl.us:rp=PTO:
+REC1|Created by redhat-config-printer 0.6.x:rm=sunrise.dor.state.fl.us:rp=REC1:
+SALEEX|Created by redhat-config-printer 0.6.x:rm=sunrise.dor.state.fl.us:rp=SALEEX:
+UCTD|Created by redhat-config-printer 0.6.x:rm=sunrise.dor.state.fl.us:rp=UCTD:
+</pre>
+
+<p> If restarting CUPS doesn't work, then take a look at the print queues
+<code>lpq</code>
+<pre>
+P1C is not ready  # The printer P1C is the one that we're having issues with- the other two printers that they use are P3c and P4C
+Rank    Owner   Job     File(s)                         Total Size
+1st     servlet 176197  Java Printing                   59392 bytes
+2nd     servlet 482068  Java Printing                   75776 bytes
+3rd     servlet 799682  Java Printing                   74752 bytes
+4th     servlet 799726  Java Printing                   76800 bytes
+</pre>
+or
+<code>[vagninib@sunrise dev]$ lpq P1C</code>
+<pre>
+P1C is not ready
+no entries
+</pre>
+
+<p> This is per <a href="https://access.redhat.com/documentation/en-US/Red_Hat_Enterprise_Linux/3/html/System_Administration_Guide/s2-printing-managing.html"> Printing in RHEL</a></p>
+
+<p>In the Sunrise /etc/sudoers file (via /usr/sbin/visudo AFTER running sudo chattr -i /etc/sudoers)</br>
+Need to add the user to this section</p>
+<pre>
+# User_Alias ADMINS = jsmith, mikem
+averyd ALL= /usr/bin/system-config-printer
+forrestp ALL= /usr/bin/system-config-printer
+allenca ALL= /usr/bin/system-config-printer
+huffbr ALL= /usr/bin/system-config-printer
+brockmak ALL= /usr/bin/system-config-printer
+eggebrad ALL= /usr/bin/system-config-printer
+horkank ALL= /usr/bin/system-config-printer
+</pre>
+
+<h4>Lsam error (on SDRBPE01A or CSEBPE01)</h4>
+<code> /etc/init.d/lsam4100 stop<br>
+ /etc/init.d/lsam4100 start</code>	
+ 
+<h4>Server (sdrbpe01a) times out after 15 min (900 seconds)</h4>
+
+<code>cd /etc/profile.d</code>
+<br>
+
+<code>[vagninib@sdrbpe01a profile.d]$ sudo vi timeout.sh</code>
+<pre>
+TMOUT=900
+readonly TMOUT
+export TMOUT
+</pre>
+per <a href="http://www.cyberciti.biz/faq/linux-unix-login-bash-shell-force-time-outs/">Timeouts</a>
+ 
+ <h4>profiled isn't running</h4>
+ <p> MUST be run as root!</p>
+ <code>cd /root/scripts/</code> 
+ <br>
+ <code>./start_profiled.sh </code>
+ <p>contents of /root/scripts/start_profiled.sh<br>
+cd /data5/imsdev/bin/hpux/ <br>
+./profiled & </p>
+ <p> then verify</p>
+<code>ps -eaf |grep profiled</code>
+<pre>
+    root 20585 20583  0 11:39:39 pts/12    0:00 /opt/java1.5/jre/bin/IA64N/java -Xmx512M -jar ./profiled.jar
+    root 20583     1  0 11:39:38 pts/12    0:00 /usr/local/bin/tcsh ./profiled
+    root 20587  2085  0 11:39:44 pts/12    0:00 grep profiled
+
+</pre>
+<p> If you have to restart profild, then most likely, you will also need to restart Apache...see below for how (under Batch Manager). If you restart Apache, you MUST do it as root.</p>
+<h4>Batch Manager</h4> 
+<p>Batch Manager is receiving a communication error, this usually means that Apache on the IMS production HP-UX box needs to be restarted.</p>
+<!--<code>/opt/hpws/apache/bin/httpd -d /opt/hpws/apache -k start</code> -->
+<p>This is the URL that they go to to launch this stuff</p>
+<p> <a href="http://ims.dor.state.fl.us/sysAdmDocs/WebStartApps/WebApps.html">http://ims/sysAdmDocs/WebStartApps/WebApps.html</a></p>
+<br>
+<code>ps -eaf|grep httpd</code>
+
+<p> Find the parent PID and kill that
+<br>
+<pre>
+vagninib 23379 17265  0 09:27:04 pts/39    0:00 grep httpd
+     www   436 25065  0  Jan 14  ?         3:00 /opt/hpws/apache/bin/httpd -d /opt/hpws/apache -k start
+    root 25065     1  0  Jan  4  ?         1:37 /opt/hpws/apache/bin/httpd -d /opt/hpws/apache -k start
+     www 25068 25065  0  Jan  4  ?        29:04 /opt/hpws/apache/bin/httpd -d /opt/hpws/apache -k start
+     www 20862 25065  0  Feb  2  ?         0:37 /opt/hpws/apache/bin/httpd -d /opt/hpws/apache -k start
+     www 20482 25065  0  Feb  1  ?         0:56 /opt/hpws/apache/bin/httpd -d /opt/hpws/apache -k start
+</pre>
+<br>
+<code>sudo kill PID</code> 
+<p>In this case, the parent PID is 25065</p>
+ <code>sudo /opt/apache/bin/apachectl stop</code>
+ <br>
+ <code>sudo /opt/apache/bin/apachectl start</code>
+ <p> then verify</p>
+ <code>ps -eaf|grep httpd</code>
+ <pre>
+      www 20617 20614  0 11:39:56 ?         0:00 /opt/hpws22/apache/bin/httpd -d /opt/hpws22/apache -k start
+    root 20614     1  0 11:39:56 ?         0:00 /opt/hpws22/apache/bin/httpd -d /opt/hpws22/apache -k start
+    root 20635  2085  0 11:40:01 pts/12    0:00 grep httpd
+     www 20621 20614  0 11:39:56 ?         0:00 /opt/hpws22/apache/bin/httpd -d /opt/hpws22/apache -k start
+     www 20620 20614  0 11:39:56 ?         0:00 /opt/hpws22/apache/bin/httpd -d /opt/hpws22/apache -k start
+
+ </pre>
+ 
+ <p>On IMS, the path to httpd is <br>
+ /opt/apache/bin/httpd -d /opt/hpws22/apache -k start</p>
+
+<!--
+<code> /etc/init.d/httpd restart </code>
+<br>
+<code> /etc/init.d/httpd start </code>
+<br>
+<code> /etc/init.d/httpd stop </code>
+-->
+<p> Another issue may be the user account on IMS that this process uses may be locked. The account is: getimg</p>
+<p> The user that usually reports this issue is:</p>
+<pre>
+Kat Horkan
+Computer Programmer Analyst II
+Information Processing
+850-717-6860 phone
+850-245-5897 fax
+</pre>
+
+<ol>
+<li>Log into the SunRise server utilizing the user id and password that was assigned to the administrator.</li>
+<li>	Type tcsh</li>
+<li>Use the following command to stop the processes:</li>
+<li>Sudo – u servlet /home/servlet/OraHome/opmn/bin/opmnctl stopall</li>
+<li>Use the following command to start the processes:</li>
+<li>Sudo –u servlet /home/servlet/OraHome/opmn/bin/opmnctl startall</li>
+</ol>
+
+
+
+<h4>No communication with nic on a Linux box on a Hyper-V host after updates/reboot</h4>
+<p>Sign into the console view (via RDP to the Hyper-V host)</p>
+<p>CD to /etc/udev/rules.d</p>
+<p>Look for 70-persistent-net.rules</p>
+<p>If found, mv 70-persistent-net.rules /home/vagninib</p>
+<p>CD to /etc/sysconfig/network-scripts </p> 
+<p><code>sudo vi ifcfg-eth0</code></br>
+comment out the MAC address filed</p>
+
+<p>Another (more permanent) option is statically assigning a MAC address (need the CIS team to help you with that)</p>
+<p>Shut down the machine</p>
+<p>They assign a MAC for the Management nic and Baas nic</p>
+<p>They turn machine back on</p>
+<p>You edit the config file</p>
+<p><code>sudo vi ifcfg-eth0</code></br>
+and enter the MAC assigned to the nic</p>
+<p>Restart the network service</p>
+
+<h4>Service account (oracle) or user account gets an access denied</h4>
+<p> Verify that their account is unlocked [<a href="#user">user accounts</a>].</p>
+<p>Verify that they (or their host) isn't in /etc/hosts.deny file or that they ARE in /etc/hosts.allow (if they are default sample files, 
+then not applicable).</p>
+<p>Check the sshd_config file</p>
+<code>sudo vi /etc/ssh/sshd_config</code>
+<p>Add the following line (or verify that user oracle is listed)</p>
+<pre>
+AllowUsers whitfies rmuser fondot hogans chenl walkerja forrestp mercmon garnettr vagninib oracle
+</pre>
+<p> If the AllowUsers line is absent, then any user can ssh to the server.</p>
+<p>Verify that the user is in a group(at a minimum, the users group); the user blah group blah doesn't count as a group for this purpose.</p>
+
+<code>sudo service /sbin/sshd restart</code> or <code>kill -HUP <em>PID</em></code>
+<p>The second one (kill -HUP) assumes that you know what the PID is for sshd; the -HUP forces the server to 
+leave the existing connections open and for new connections, re-read the config file that you just changed.</p>
+
+<h4>Not getting the security messages when someone sudos</h4>
+<code>sudo vi /etc/mail/sendmail.cf</code>
+<code>/DS then enter</code>
+
+<p>Look for </p>
+<pre>
+# "Smart" relay host (may be null)
+DSDORQUEST.FDOR.DOR.STATE.FL.US
+or 
+DSFDOREXCHHV.FDOR.DOR.STATE.FL.US
+</pre>
+<p> Also look for:</p>
+<pre>
+# queue directory
+O QueueDirectory=/var/spool/mqueue
+</pre>
+
+<p>edit aliases file</p>
+<p>sudo vi /etc/aliases</p>
+<pre>
+# Person who should get root's mail
+#root:          marc
+root:           NWRUnix-DOR@nwrdc.fsu.edu
+security:       Security_UNIX_Log_DOR@nwrdc.fsu.edu
+</pre>
+
+<code>sudo newaliases</code>
+
+<code>sudo tail /var/log/maillog</code>
+<p> This is to watch the smtp traffic
+
+<code>sudo sendmail -q -v</code>
+
+<code>nslookup nwrdc.fsu.edu</code>
+<p> This is because of the security alias- checking to see if the server can resolve nwrdc.fsu,edu</p>
+
+<p> If it cannot, then need to look at the resolv.conf file</p>
+<code>sudo vi /etc/resolv.conf</code>
+
+<p>should contain:</p>
+<pre>
+search fdor.dor.state.fl.us
+nameserver 204.89.74.180
+nameserver 204.89.74.18
+</pre>
+
+<p> if necessary...</p>
+<code>/sbin/service sendmail restart</code>
+
+<h4>Testing email from RHEL server with sendmail installed</h4>
+<p>Use the mail command</p>
+
+<p>Run the command below, to send an email to someone@example.com. 
+<br>The s option specifies the subject of the mail followed by the recipient email address.</p>
+
+<code>mail -s "Hello World" someone@example.com</code><br>
+
+<p>The above command is not finished upon hitting Enter. Next you have to type in the message. <br>
+When you're done, hit 'Ctrl-D' at the beginning of a line</p>
+<pre>
+$ mail -s "Hello World" someone@example.com
+Hi Peter
+How are you
+I am fine
+Good Bye
+<Ctrl+D>
+</pre>
+<p>per <a href="http://www.binarytides.com/linux-mail-command-examples/">http://www.binarytides.com/linux-mail-command-examples/</a></p>
+
+
+<h4>Server not able to install new packages or receive updates</h4>
+<p><code> sudo yum install PACKAGE-NAME</code> 
+<br />returns the following:</p>
+<pre>
+Loaded plugins: product-id, refresh-packagekit, security, subscription-manager
+This system is registered to Red Hat Subscription Management, but is not receiving updates. You can use subscription-manager to assign subscriptions.
+
+*** WARNING ***
+The subscription for following product(s) has expired:
+  - Oracle Java (for RHEL Server)
+  - Red Hat Beta
+  - Red Hat Enterprise Linux Server
+  - Red Hat Software Collections Beta (for RHEL Server)
+You no longer have access to the repositories that provide these products.  It is important that you apply an active subscription in order to resume access to security and 
+
+other critical updates. If you don't have other active subscriptions, you can renew the expired subscription.  
+</pre>
+<p>per <a href="https://access.redhat.com/solutions/189533">https://access.redhat.com/solutions/189533</a></p>
+
+<p>When using a http proxy with RHSM, the proxy settings need to be put in /etc/rhsm/rhsm.conf (and not /etc/yum.conf).</p>
+
+<p>One thing to check:</p>
+</p>Renewing Subscriptions</p>
+<p><a href="https://access.redhat.com/wapps/support/protected/subscriptions.html#showRecentlyExpiredTab">https://access.redhat.com/wapps/support/protected/subscriptions.html#showRecentlyExpiredTab</a></p>
+<p>If the server doesn't have an active subscription:</p>
+<code>sudo subscription-manager register --autosubscribe --force</code>
+<pre>
+Username: brian_vagnini@nwrdc.fsu.edu
+Password: 
+The system has been registered with ID: a166046f-5965-481c-b3dc-b1de97745430 
+
+Installed Product Current Status:
+Product Name: Red Hat Enterprise Linux Server
+Status:       Subscribed
+</pre>
+<h4>Issues with RHEL updates/new Kernel won't boot up</p>
+<p><a href="http://www.cyberciti.biz/faq/yum-history-command/">http://www.cyberciti.biz/faq/yum-history-command/</a></p>
+
+<p><a href="https://access.redhat.com/documentation/en-US/Red_Hat_Enterprise_Linux/6/html/Deployment_Guide/s1-kernel-boot-loader.html">Setting the default kernel to boot to (e.g. forcing it to boot to an older kernel)</a></p>
+
+<p class="os">Windows Server</p>
+<h4>WMI Services are hung and won't stop or restart</h4>
+<p> From a command prompt, run the following:</p>
+<code>sc queryex winmgmt</code>
+<p>Identify the PID</p>
+<code>taskkill /pid 504 /f  ##or whatever the PID number actually is</code>
+<p> Rejoice</p>
+
+<p> Per <a href="http://community.bartdesmet.net/blogs/bart/archive/2004/10/16/438.aspx">http://community.bartdesmet.net/blogs/bart/archive/2004/10/16/438.aspx</a></p>
+
+<h4>VSS Service Writers are Hung</h4>
+<p>Enter the following in Powershell</p>
+<code>Stop-Service -force BITS,VSS,AppHostSVC,CryptSvc,IISADMIN,Winmgmt</code>
+<code>Start-Service BITS,VSS,AppHostSVC,CryptSvc,IISADMIN,Winmgmt</code>
+
+<p>To check that the writers are back up:</p>
+<code>vssadmin list writers</code> <br>
+
+<h4>Windows Update is Hung</h4>
+<p>Enter the following in the command line:</p>
+<code>net stop wuauserv</code><br>
+<code>net stop BITS</code>
+<p>Rename C:\Windows\SoftwareDistribution to C:\Windows\SoftwareDistributionOld</p>
+<code>net start wuauserv</code><br>
+<code>net start BITS</code>
+
+<a href="#toc">Back to TOC</a>
+
+<h1>FLVC</h1>
+<p class="os">Redhat Linux</p>
+<h4>Task: Add storage to FCLnx31</h4>
+
+<p>Here are the commands that need to be run on fclnx31.fcla.edu to find, format and mount the new disk:</p>
+
+<code> 1) sudo /usr/bin/scsi-rescan</codE>
+<pre>
+0 new device(s) found.               
+0 device(s) removed.  
+</pre>
+<p>To make sure the system knows about the new LUN.</p>
+
+<code> 2) sudo /sbin/multipath -l | egrep -i 600507680280863AB000000000000055 </code>
+
+<p>Finds which multipath is for the new volume.  It'll be something like 'mpath157' or some other number. 
+<br<The long number above came from the UID when the storage team created the LUN.  If you don't get something back from this command, <br>
+do not go any farther and let me know.</p>
+
+<code>mpath157 (3600507680280863ab000000000000055) dm-213 IBM,2145 </code>
+<br> <br>
+
+<code> 3) sudo /usr/sbin/pvcreate /dev/mapper/mpath157</code>
+
+<p>Or whatever mpath number the previous command gave.  Creates a physical volume out of the LUN.</p>
+
+<pre>
+File descriptor 6 (/proc/stat) leaked on pvcreate invocation. Parent PID 5436: sudo
+  Writing physical volume data to disk "/dev/mapper/mpath157"
+  Physical volume "/dev/mapper/mpath157" successfully created
+</pre>
+
+<code> 4) VG=ao</code>
+
+<p>Setting a variable to the volume group name suffix since we'll be using it often.</p>
+
+<code> 5) sudo /usr/sbin/vgcreate -s 64M vg_silo_$VG /dev/mapper/mpath157</code>
+
+<pre>Creating the volume group for the LUN.
+
+File descriptor 6 (/proc/stat) leaked on vgcreate invocation. Parent PID 5832: sudo
+  Volume group "vg_silo_ao" successfully created
+
+</pre>
+<code> 6) sudo /bin/cp -p /etc/fstab /etc/fstab.`date +"%Y%m%d"`</code>
+
+<p>Make a backup copy of the fstab file just in case.</p>
+
+<code> 7) for silo in 150 151 152 153; do <br>
+       sudo /usr/sbin/lvcreate vg_silo_$VG -n lv_daitssfs$silo -l 31999<br>
+       sudo /sbin/mkfs.ext3 -m 1 /dev/vg_silo_$VG/lv_daitssfs$silo<br>
+       sudo /bin/mkdir /daitssfs/$silo<br>
+       sudo bash -c " printf '/dev/mapper/vg_silo_$VG-lv_daitssfs$silo\t\t/daitssfs/$silo\text3\tdefaults\t1 2\n' >> /etc/fstab" <br>
+	   <!--sudo printf "/dev/mapper/vg_silo_$VG-lv_daitssfs$silo\t\t/daitssfs/$silo\text3\tdefaults\t1 2\n" >> /etc/fstab<br> -->
+       sudo /bin/mount /daitssfs/$silo<br>
+       sudo /bin/chown daitss:daitss /daitssfs/$silo<br>
+       done
+</code>
+<p>Run a shell loop to create four logical volumes from the LUN, make filesystems on them, add them to /etc/fstab, mount them, <br>
+and finally change the ownership to whom we need.</p>
+<pre>
+File descriptor 6 (/proc/stat) leaked on lvcreate invocation. Parent PID 12808: sudo
+  Logical volume "lv_daitssfs153" created
+mke2fs 1.39 (29-May-2006)
+Filesystem label=
+OS type: Linux
+Block size=4096 (log=2)
+Fragment size=4096 (log=2)
+262144000 inodes, 524271616 blocks
+5242716 blocks (1.00%) reserved for the super user
+First data block=0
+Maximum filesystem blocks=4294967296
+16000 block groups
+32768 blocks per group, 32768 fragments per group
+16384 inodes per group
+Superblock backups stored on blocks: 
+        32768, 98304, 163840, 229376, 294912, 819200, 884736, 1605632, 2654208, 
+        4096000, 7962624, 11239424, 20480000, 23887872, 71663616, 78675968, 
+        102400000, 214990848, 512000000
+
+Writing inode tables: done                            
+Creating journal (32768 blocks): done
+Writing superblocks and filesystem accounting information: done
+
+This filesystem will be automatically checked every 32 mounts or
+180 days, whichever comes first.  Use tune2fs -c or -i to override.
+<!---bash: /etc/fstab: Permission denied
+mount: can't find /daitssfs/153 in /etc/fstab or /etc/mtab
+-->
+</pre>
+<!--
+<p>the below commands were added to fix the script error</p>
+<pre>
+/etc/fstab lines to be added manually:
+/dev/mapper/vg_silo_ao-lv_daitssfs150           /daitssfs/150   ext3    defaults        1 2
+/dev/mapper/vg_silo_ao-lv_daitssfs151           /daitssfs/151   ext3    defaults        1 2
+/dev/mapper/vg_silo_ao-lv_daitssfs152           /daitssfs/152   ext3    defaults        1 2
+/dev/mapper/vg_silo_ao-lv_daitssfs153           /daitssfs/153   ext3    defaults        1 2
+
+sudo /bin/mount /daitssfs/150
+sudo /bin/mount /daitssfs/151
+sudo /bin/mount /daitssfs/152
+sudo /bin/mount /daitssfs/153
+sudo /bin/chown daitss:daitss /daitssfs/150
+sudo /bin/chown daitss:daitss /daitssfs/151
+sudo /bin/chown daitss:daitss /daitssfs/152
+sudo /bin/chown daitss:daitss /daitssfs/153
+</pre>
+-->
+<p>That should do it.  We fill up a silo about every month give or take, so expect similar requests to show up every 3-5 months. <br>
+Let me know if you have any questions.<br> <br>
+
+Darryl Marsee (352-415-6839) (<a href="mailto:DMarsee@flvc.org">DMarsee@flvc.org</a>)</p>
+
+<h3>FLVC Setup of Linux on Dell server</h3>
+<p> per Richard 052016</p>
+<pre>
+Step 1
+
+1) Rack server, attach NICs and fiber to designated locations (this should be completed by FLVC staff)
+2) Configure iDRAC using provided IP (should be completed by FLVC staff)
+3) Use Dell RAID configuration utility (control R - prompted during boot up) to create a RAID    1 mirrored drives with two of the drives,    third drive setup as hot spare
+4) Use RHEL 6.7 media to install the OS
+5) Configure mount points with names and size from the build sheet
+6) Configure IP information by modifying /etc/sysconfig/network file and    /etc/sysconfig/network-scripts/ifcfg-em1-4.  See procedure for NIC failover
+7) Configure firewall rules by adding rules to /etc/sysconfig/iptables file.  Example would be
+   iptables -A INPUT -s 192.168.x.x -p tcp --destination-port 69 -j ACCEPT.
+8) Use yum install to install requested libraries
+9) Yum update to update server with latest RHEL updates
+
+FLVC Registering New Server
+
+1. Change into the /usr/share/rhn/ directory and download the SSL certificate to the client: 
+2. # cd /usr/share/rhn/ 
+   # wget http://rhn.flvc.org/pub/RHN-ORG-TRUSTED-SSL-CERT
+3. Edit the /etc/sysconfig/rhn/up2date file and ensure that it contains the following entries: 
+   serverURL=https://rhn.flvc.org/XMLRPC
+   noSSLServerURL=http://satellite.example.com/XMLRPC
+   sslCACert=/usr/share/rhn/RHN-ORG-TRUSTED-SSL-CERT
+7. Use the rhn_register command to register the machine: 
+   # rhn_register
+
+If a new trusted ssl cert is needed then follow these instructions 
+
+# rpm -Uvh http://rhn.flvc.org/pub/rhn-org-trusted-ssl-cert-1.0-7.noarch.rpm
+# rhnreg_ks --force --activationkey=43-f62ada61fc210abdc8ecc9791cf134e9 --serverUrl   https://rhn.flvc.org/XMLRPC 
+# service rhnsd restart
+</pre>
+<p> For Nic Failover setup instructions, see <a href="#net">#net</a></p>
+
+
+<h1>DOE</h1>
+<!-- Becoming Root  in *nix if your account has sudo access -->
+<!--
+
+<h4>[becoming root:]</h4>
+<code>sudo vi test</code><br>
+<code>ESC:</code><br>
+<code>!/bin/sh </code><br> 
+<code>id</code><br>
+<p>(you just became root)</p>
+
+-->
+
+
+</body>
+</html>

@@ -1,70 +1,53 @@
-/* This is a Main_dish components feed in JSON */
+/* This is the vegetable components feed in JSON */
 {
-    "Main_Dish": {
-        "Beef": {
-            "1": "Steak",
-            "2": "Cube Steak",
-            "3": "Beef Tips",
-			"4": "Hamburger",
-            "5": "Pot Roast",
-			"6": "Meat Loaf",
+    "Vegetable": {
+        "Beans": {
+            "1": "Green Beans",
+            "2": "Lima Beans",
+            "3": "Navy Beans",
+			      "4": "Pinto Beans",
+            "5": "Black Beans",
+            "6": "Shelly Beans"
         },
-		
-        "Pork": {
-            "1": "Pork Chop (baked)",
-            "2": "Pork Chop (Fried)",
-            "3": "Ham Slice",
-			"4": "Bacon",
-			"5": "Pork Roast",          
+
+        "Peas": {
+            "1": "Green Sweet Peas",
+            "2": "Black Eyed Peas",
         },
-		
-		   "Sausage": {
-            "1": "Italian Sausage",
-            "2": "Smoked Sausage",
+
+		   "Corn": {
+            "1": "Corn",
+            "2": "Corn on the Cob",
+            "3": "Creamed Corn",
         },
-		
-		   "Chicken/Eggs": {
-            "1": "Chicken Tenders/Nuggets",
-            "2": "Whole Roasted Chicken",
-            "3": "Baked Chicken (Thighs, Wings, Legs)",
-			"4": "Air-Fried Chicken (Thighs, Wings, Legs)",
-			"5": "Fried Chicken",
-			"6": "Cornish Game Hens",
-			"7": "Chicken-n-Waffles",
-			"8": "Scrambled Eggs",
-			"9": "Fried Eggs",    
+
+		   "Squash": {
+            "1": "Yellow Squash/Onions",
+            "2": "Fried Breaded Squash",
+            "3": "Squash/Zuccini/Mushrooms",
         },
-		
-		   "Seafood": {
-            "1": "Baked Fish",
-            "2": "Grilled/Pan Fried Fish",
-            "3": "Fried Catfish",
-			"4": "Fried Shrimp",
-			"5": "Boiled Shrimp",
-			"6": "Grilled Shrimp",
-			"7": "Crab",
-			"8": "Lobster Tail",
-			"9": "Tuna",
-			"10": "Salmon Croquets",
-			"11": "Fish Tacos",            
+
+		   "Tomatoes": {
+            "1": "Tomato Slices",
+            "2": "Fried Green Tomatoes",
+            "3": "Tomatoes and Okra",
         },
-		
-			"Sandwiches": {
-            "1": "PB-n-J",
-            "2": "Open Faced Tomatoe, Bacon, and Mushroom",
-            "3": "Open Faced Manwiches",
-			"4": "Grilled Cheese/Tomato Soup",
-			"5": "BLT",
-			"6": "Pineapple & Cheese",
-			"7": "Peanut Butter & Banana",
-			"8": "BBQ Sandwich",           
+
+			"Cabbage": {
+            "1": "Cabbage",
+            "2": "Boiled Cabbage",
+            "3": "Steamed Cabbage",
         },
-		
-			"Meals": {
-            "1": "Homemade Hamburger Helper (HHH)",
-            "2": "Cheesy Rotele Chicken & Rice (CRx2)",
-            "3": "Breakfast",           
+
+			"Misc:": {
+            "1": "Fried Okra",
+            "2": "Mushrooms",
+            "3": "Salad",
+            "4": "Eggplant Fritters",
+            "5": "Carrots",
+            "6": "Cauliflower (Garlic Roasted)",
+            "7": "Onions/Peppers",
+            "8": "Broccoli",
         }
-		
     }
 }

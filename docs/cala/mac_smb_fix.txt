@@ -1,0 +1,15 @@
+From http://cammodude.blogspot.com/2013/10/os-x-109-mavericks-workaround-for-smb.html
+
+To force all connections to be SMB1:
+Open A terminal window
+paste in the following line followed by the return key(should be all on one line):  
+echo "[default]" >> ~/Library/Preferences/nsmb.conf; echo "smb_neg=smb1_only" >> ~/Library/Preferences/nsmb.conf
+
+What the command does:
+Creates a file called nsmb.conf  in your  home directory at the path ~/Library/Preferences/nsmb.conf.
+Adds directives to force SMB connections to use the SMB1 protocol.  This is slower but stable.
+
+How to remove the workaround:
+Open a terminal window
+paste in the following at the prompt and then hit the return button:
+rm ~/Library/Preferences/nsmb.conf

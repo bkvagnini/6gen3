@@ -23,45 +23,46 @@
 
     <!-- Custom styles for this template -->
 	<link href="css/feeeedme.css" rel="stylesheet">
+		<script src="js/choose_from_list.js"></script>
 </head>
-	<body> 
-		<!--     -->
-		<!-- Load meals.json into memory    -->
-		<script> 
-//This currently doesn't work - 082618
-var main_dish = JSON.parse(main_dish);
+		<body>
+		<script>//var btn = document.querySelector('input');
+//var txt = document.querySelector('p');
 
-   </script>
-		<!--  Form with a button that says feeeed me   -->
-		<form name="form1">
-<input type="button" value="Feeeed Me!">
+//btn.addEventListener('click', updateBtn);
 
-		</form>	
-		<script>var btn = document.querySelector('input');
-var txt = document.querySelector('p');
+//function updateBtn() {
+  //if (btn.value === 'Feeeed Me!') {
+    //btn.value = 'Here...Try this';
 
-btn.addEventListener('click', updateBtn);
+  //} else {
+    //btn.value = 'Feeeed Me!';
 
-function updateBtn() {
-  if (btn.value === 'Feeeed Me!') {
-    btn.value = 'Here...Try this';
+  //}
+//}</script>
+<h1> Hungry?</h1>
+<h4>Try this...</h4>
+<p> <strong>Note:</strong> This is a WIP, so this doesn't quite work just yet...</p>
+<form name="Choose_buttons">
+<input type="button" value="Meats" class = "main_dish" onclick = "random_dish();
+    $('#main_dish').on('click', random_dish);">
 
-  } else {
-    btn.value = 'Feeeed Me!';
+<input type="button" value="Vegetables" class = "vegetable" onclick = "">
+<input type="button" value="Starches" class = "starch" onclick = "">
+<input type="button" value="Breads" class = "bread" onclick = "">
+<input type="button" value="Sauces" class = "sauce" onclick = "">
 
-  }
-}</script>
-		<!-- Randomizer    -->
-		<!-- Button returns a random value for Meats    -->	
-		<!-- Button returns a random value for Vegetables    -->		
-		<!-- Button returns a random value for Starch (Rice, Noodels etc.) -->
-		<!-- Button returns a random value for Sauce -->
-		
-		
-		
+</form>
+
+
+
 <!-- FOOTER -->
       <footer>
+				<br />
+				<hr>
         <p>&copy; 2018 6gen3 </p>
+				<p>For information on this app, please
+					contact <a href="mailto:brian@vagnini.net">brian@vagnini.net</a>.</p>
       </footer>
     </div><!-- /.container -->
     <!-- Bootstrap core JavaScript
@@ -75,4 +76,3 @@ function updateBtn() {
   </body>
 
 </html>
-

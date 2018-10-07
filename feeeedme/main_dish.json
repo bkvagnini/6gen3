@@ -9,20 +9,20 @@
             "5": "Pot Roast",
 			"6": "Meat Loaf",
         },
-		
+
         "Pork": {
             "1": "Pork Chop (baked)",
             "2": "Pork Chop (Fried)",
             "3": "Ham Slice",
 			"4": "Bacon",
-			"5": "Pork Roast",          
+			"5": "Pork Roast",
         },
-		
+
 		   "Sausage": {
             "1": "Italian Sausage",
             "2": "Smoked Sausage",
         },
-		
+
 		   "Chicken/Eggs": {
             "1": "Chicken Tenders/Nuggets",
             "2": "Whole Roasted Chicken",
@@ -32,9 +32,10 @@
 			"6": "Cornish Game Hens",
 			"7": "Chicken-n-Waffles",
 			"8": "Scrambled Eggs",
-			"9": "Fried Eggs",    
+			"9": "Fried Eggs",
+      "10": "Chicken Quesadillas",    
         },
-		
+
 		   "Seafood": {
             "1": "Baked Fish",
             "2": "Grilled/Pan Fried Fish",
@@ -46,9 +47,9 @@
 			"8": "Lobster Tail",
 			"9": "Tuna",
 			"10": "Salmon Croquets",
-			"11": "Fish Tacos",            
+			"11": "Fish Tacos",
         },
-		
+
 			"Sandwiches": {
             "1": "PB-n-J",
             "2": "Open Faced Tomatoe, Bacon, and Mushroom",
@@ -57,14 +58,17 @@
 			"5": "BLT",
 			"6": "Pineapple & Cheese",
 			"7": "Peanut Butter & Banana",
-			"8": "BBQ Sandwich",           
+			"8": "BBQ Sandwich",
         },
-		
+
 			"Meals": {
             "1": "Homemade Hamburger Helper (HHH)",
             "2": "Cheesy Rotele Chicken & Rice (CRx2)",
-            "3": "Breakfast",           
+            "3": "Breakfast",
+            "4": "Lasagna",
+            "5": "Chili Cheese Dogs",
+            "6": "Corn Dogs",
         }
-		
+
     }
 }

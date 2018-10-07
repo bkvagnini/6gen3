@@ -1,0 +1,141 @@
+--CALA Clean Install--
+
+# 1. Install Xcode and command-line tools.
+ 
+# 2. Install Homebrew.
+ruby -e "$(curl -fsSL https://raw.github.com/mxcl/homebrew/go/install)"
+ 
+# 3. Put local directories at the front of $PATH in ~/.bash_profile
+#    PATH=/usr/local:/usr/local/bin:$PATH
+#    export PATH
+reset
+ 
+# 4. Make sure Homebrew is ready to go.
+brew update
+brew doctor
+ 
+# 5. Install Python and virtualenv/virtualenvwrapper
+brew install python
+brew install python3
+pip install virtualenv
+pip install virtualenvwrapper
+pip install flake8  # Python linter
+mkdir ~/.virtualenvs
+# Add to ~/.bash_profile:
+# export WORKON_HOME=$HOME/.virtualenvs
+# source /usr/local/bin/virtualenvwrapper.sh
+mkvirtualenv py27
+workon py27
+deactivate
+ 
+# 6. Install rbenv and Ruby
+brew install rbenv
+# Add to ~/.bash_profile:
+# if which rbenv > /dev/null; then eval "$(rbenv init -)"; fi
+brew install ruby-build
+rbenv rehash
+rbenv install 2.0.0-p353
+reset
+rbenv versions  # Should be 2.0.0-p353
+ 
+# 7. Install Janus Vim distribution
+curl -Lo- https://bit.ly/janus-bootstrap | bash
+# Add a ~/.vimrc.after file (see below).
+ 
+# 8. Download and install Textmate 2
+# https://github.com/textmate/textmate/releases
+# Add a ~/.tm_properties file (see below).
+
+--bash_profile--
+
+if [ -f ~/.bash_aliases ]; then
+  . ~/.bash_aliases
+fi
+ 
+PATH=/usr/local:/usr/local/bin:$PATH
+export PATH
+ 
+# rbenv
+if which rbenv > /dev/null; then eval "$(rbenv init -)"; fi
+ 
+# virtualenvwrapper
+export WORKON_HOME=$HOME/.virtualenvs
+source /usr/local/bin/virtualenvwrapper.sh
+
+
+--tm_properites--
+
+# Basic Settings
+#
+fontSize = 13
+ 
+# Extra files to include
+#
+myExtraIncludes = ".tm_properties,.htaccess,.gitignore"
+fileBrowserGlob  = "{*,$myExtraIncludes}"
+include = "{$include,$myExtraIncludes}"
+ 
+# Hide log, vendor and tmp directories from search popups.
+#
+myExtraExcludes = "log,vendor,tmp,_site"
+excludeInFileChooser  = "{$excludeInFileChooser,$myExtraExcludes}"
+excludeInFolderSearch = "{$excludeInFolderSearch,$myExtraExcludes}"
+ 
+# If you also want to hide them from your project manager pane, add
+# the following line to your project's local .tm_properties.
+#
+excludeInBrowser = "{$excludeInBrowser,log,vendor,tmp,_site}"
+ 
+# Language Paths
+TM_PYTHON = "/usr/local/bin/python"
+PYTHONPATH = "/usr/local/lib/python2.7/site-packages"
+TM_PYCHECKER = "/usr/local/bin/flake8"
+ 
+TM_RUBY = "$HOME/.rbenv/shims/ruby"
+ 
+# Configure git and hg
+#
+# TM_HG  = "/opt/local/bin/hg"
+TM_GIT = "/usr/local/bin/git"
+ 
+# Default editing configuration
+#
+softWrap = false
+softTabs = true
+tabSize = 2
+ 
+# File type specific configuration
+#
+[ text ]
+showInvisibles = true
+ 
+[ .git/COMMIT_EDITMSG ]
+spellChecking = true
+spellingLanguage = 'en'
+ 
+[ *.{icns,ico,jpg,jpeg,m4v,nib,pdf,png,psd,pyc,rtf,tif,tiff,xib} ]
+binary = true
+ 
+[ source ]
+softTabs = true
+tabSize = 2
+ 
+[ source.python ]
+softTabs = true
+tabSize = 4
+ 
+[ "{README,INSTALL,LICENSE,TODO}" ]
+fileType = "text.plain"
+
+--vimrc.after--
+
+set t_Co=256
+set background=light
+color lucius
+LuciusWhite
+ 
+" Use four spaces for c code.
+if has("autocmd")
+  au FileType c setlocal softtabstop=4 tabstop=4 shiftwidth=4
+  au FileType objc setlocal softtabstop=4 tabstop=4 shiftwidth=4
+end

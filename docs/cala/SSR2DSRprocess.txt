@@ -1,0 +1,26 @@
+SSR to DSR / SAR to DAR comparison
+We also typically run an awk script ( /script/sar_to_dar.sh and /script/ssr_to_dsr.sh) to perform a comparison between ours and theirs. It will require 2 folders inside of /data - /sar_dar and ssr_dsr. When the awk script finishes, it will produce a file called difference.txt. We report this file to DOE. It also creates 2 other files (other than the DARs, SARs, and DSRs placed there). These are sorted_our_dar_file.txt  (or dsr) and sorted_their_dar_file.txt (or dsr). 
+
+NOTE: You will need to place the AGG or SSR file inside of this directory for the awk script to function properly. UNZIP the files first!
+You will also need to remove district 98 from the DAR by deleting it from the SAR_DAR folder. 
+
+Getting Started
+The most efficient way to do this process is to be inside of the data/sar_dar directory when running the script/sftp.sh, then get all of the files (get *.*) from the path provided (you may have to call the sftp script via ../.././script.sftp.sh ). This will dump ALL the files inside of the sar_dar folder. To move just the DSR files, run the following from inside of the sar_dar folder: 
+
+mv *DSR*.txt ../ssr_dsr
+
+This will move the DSR files to the ssr_dsr folder for you. Switch to that folder.
+Next, run the following to combine the SSR files into 1 file (do this for both folders):
+
+cat R04WSSR0c.txt R08WSSR0c.txt R10WSSR0c.txt > our_ssr_file.txt
+
+Then, verify in the ssr_to_dsr.sh file the length and the correct start and end positions of the pas via the DSR layout, not the SSR layout. This step isn’t required in the sar_dar.sh script.
+
+Now, change directories back to the scoring_reporting folder and run the script/ssr_to_dsr.sh our_ssr_file.txt and script/sar_to_dar.sh our_agg_file.txt (for the sar_dar process, you may be able to use the concatenated file they provided (FCAT_14SPR_SAR_WRIT.txt))
+
+This script requires an argument for the SSR or SAR file that it will run against. In our case, it’s our_ssr_file.txt.
+
+Finding the cause of Issues: (e.g. they excluded school type 17 from their DSR files)
+To find the count of the schools that are of type 17 (at position 79, per the DSR Layout):
+awk ‘substr($0, 79, 2)==”17” {print}’ data/ssr_dsr/our_ssr_file.txt > temp
+then wc -l temp to get the line count.

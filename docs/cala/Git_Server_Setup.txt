@@ -1,0 +1,64 @@
+-+- Git Server Installation-+-
+
+1) Install Ubuntu Server 12.04 or later (prefer 13.10)
+    (install SSH and Samba as part of the install)
+
+2) Create a programmers group (gardeners) on the server, as well as a folder to contain the files
+
+3) Sign in as user git 
+    (git:calaisgr8)
+
+4) Make the folder for SSH
+    mkdir .ssh 
+
+5) Create the file authorized_keys
+    touch .ssh/authorized_keys 
+
+6) Copy the user generated public key to .ssh/authorized_keys
+    cat id_rsa.USERNAME.pub >> .ssh/authorized_keys
+
+7) Confirm the addition of the newly copied key
+    vim .ssh/authorized_keys 
+        (located under /home/git/.ssh/authorized_keys)
+
+(The above are the commands that Sean ran on Catkin as the user git)
+
+
+--To add a new user to the Git Server--
+0) Log into the Server
+
+1) Add a new user 
+    sudo adduser USERNAME  (e.g. sudo adduser bvagnini)
+
+2) Add new user to the group
+    sudo usermod -a -G GROUPNAME USERNAME (e.g. sudo usermod -a -G gardeners bvagnini)
+
+3) Add USERNAME to the list of users
+    sudo nano /etc/samba/smbusers
+    (e.g. USERNAME="USERNAME" or bvagnini="bvagnini")
+
+4) Edit the valid users under the Shares portion of the smb.conf file
+    sudo nano /etc/samba/smb.conf 
+        (edit the valid users under [files] and [git] and add USERNAME to it)
+
+5) Add the user 
+    sudo smbpasswd -L -a USERNAME (-a means to add)
+    
+6) Enable the user 
+    sudo smbpasswd -L -e USERNAME (-e means to enable)
+
+7) Restart the Samba service
+    sudo service smbd restart
+
+--Creating the SSH key for the user--
+1) Creating the public and private SSH keys on your machine
+    ssh-keygen -t rsa -C "USERNAME@EMAILADDRESS" 
+    (e.g ssh-keygen -t rsa -C "bvagnini@cala.fsu.edu" 
+    This process will prompt for a password- you will need something fairly good and will need to remember it for step #? later
+
+2) Copy the public key generated in the above step 
+    cp id_rsa.pub id_rsa.brian.pub
+
+3) Copy the copied public key to the Git Server
+    scp id_rsa.brian.pub git@catkin:/home/git
+

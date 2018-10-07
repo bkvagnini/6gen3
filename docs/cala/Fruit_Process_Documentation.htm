@@ -1,0 +1,1496 @@
+<html>
+<head>
+  <title>FRUIT Process Documentation</title>
+  <script></script>
+</head>
+<body>
+
+<h1>FRUIT Process Documentation</h1>
+<em>Created 9/24/14 bkv -- Updated 11/5/14 bkv</em>
+<a name ="top"></a>
+<h2> Table of Contents</h2>
+<ul>
+  <li><a href="#big_picture">The Big Picture </a></li>
+    <ul>
+      <li><a href="#environment">The environment </a></li>
+    </ul>
+  <li><a href="#lifecycle">The Lifecycle </a></li>
+  <li><a href="#overall_process">The Overall Process </a></li>
+    <ul>
+      <li><a href="#clone">Cloning Our Project </a></li>
+    </ul>
+  <li><a href="#setup">The Setup </a></li>
+  <li><a href="#getting_started">Getting Started </a></li>
+  <li><a href="#changing_layouts">Changing Layouts </a></li>
+    <ul>
+      <li><a href="#tests">Tests </a></li>
+      <li><a href="#test_cases">Test Cases </a></li>
+      <li><a href="#maps">Generating Maps </a></li>
+    </ul>
+  <li><a href="#check_in_code">Checking in your Code </a></li>
+    <ul>
+      <li><a href="#verification">Verificiation Process </a></li>
+    </ul>
+  <li><a href="#strawberry"> Running the Strawberry file </a></li>
+    <ul>
+      <li><a href="#verify_output"> Verifying Output </a></li>
+      <li><a href="#output_gotcha">Output Gotchas </a></li>
+    </ul>
+  <li><a href="#apple">Running the Apple file</a></li>
+     <ul>
+       <li><a href="#rules">Rulesets </a></li>
+       <li><a href="#contract_rules">Mapping Contract lines to Rulesets </a></li>
+     </ul>
+  <li><a href="#getting_files">Getting the Data Files </a></li>
+  <li><a href="#reports">Reports </a></li>
+    <ul>
+      <li><a href="#pearson_reports">Obtaining Pear's Reports </a></li>
+      <li><a href="#generating_reports">Generating Our Reports </a></li>
+      <li><a href="#tech_note">Technical Note </a></li>
+      <li><a href="#modifying_reports">Modifying Reports </a></li>
+      <li><a href="#report_codebase">In-Depth View of the Reports Codebase </a></li>
+      <li><a href="#report_gotcha">Reports Gotchas </a></li>
+      <li><a href="#strawberry2durian">Strawberry to Durian Comparison </a></li>
+      <li><a href="#strawberry_durian_start">Strawberry/Durian Getting Started </a></li>
+      <li><a href="#issues_cause">Finding the cause of issues </a></li>
+    </ul>
+  <li><a href="#feedback">Sending Feedback </a></li>
+    <ul>
+      <li><a href="#some_issues">Feedback example with some issues </a></li>
+      <li><a href="#feedback_issues">Feedback example with some Strawberry issues </a></li>
+      <li><a href="#no_issues">Feedback example with no issues </a></li>
+      <li><a href="#apple_issues">Feedback example with Apple issues </a></li>
+      <li><a href="#common_issue">Feedback example with common issue </a></li>
+      <li><a href="#cala_sftp">Accessing Cheerio's SFTP Site </a></li>
+      <li><a href="#email_sent">Once you click Send </a></li>
+      <li><a href="#misc">Misc. Stuff </a></li>
+    </ul>
+  <li><a href ="#what_next">What's Next</a></li>
+  
+  
+
+</ul>
+
+<p><a href ="#top">Back to TOC</a></p>
+<a name ="big_picture"></a>
+<h2>The Big Picture</h2>
+<p>The Florida Department of Chip Snacks (Dorito) wants a 
+standardized test assessing what the students in grades 3 through 10 have 
+learned. They contract out the creation, administration, and scoring of 
+the test to a company (currently Pear). To ensure accuracy, they 
+contract out a verification process on the test results to an independent, 
+third party (currently Cheerio).</p>
+
+<p>We have four main areas as part of our contract with Dorito: Scoring and 
+Reporting, Demonstration, Retrofitting and School Grades, which encompasses
+several distinct processes of its own. We will focus right now on Scoring 
+and Reporting. Within Scoring and Reporting, there are two sections. There 
+are the actual FRUIT tests (Raspberry, Melon, Watermelon and Satsuma), and then 
+there is Eggplant (for Apricot, Banana, 
+Cherry, Grape and Honeydew). </p>
+
+<p>Our job, then, is to independently check Pear's work. We achieve this 
+by recreating the scoring and reporting aspects using our own systems and 
+programming language, but with the same supporting documentation and 
+specifications that the primary vendor (Pear) gets. We get these 
+documents from Dorito via e-mail and SFTP server access. We check the files 
+(to ensure that the right type of data is present) and we look for 
+duplicates. We provide feedback to Dorito via e-mail (with certain files 
+stored on an SFTP server).</p>
+
+<p>We do not talk to Pear at all. </p>
+<p><a href ="#top">Back to TOC</a></p>
+<!-- END Big Picture  -->
+<a name ="environment"></a>
+<h3>The environment</h3>
+<p>We use a few programming languages for this task. The assessment-old 
+project folder uses Ruby ver 1.9.3-p545 (as verified by the .ruby-version 
+file) and Python 2.7 (NOT 3.x). The new Assessment project is being rewritten in 
+Objective-C. We use Git for version control and we house our own Git server
+on premise for this exact task. It is (per the contract), NOT accessible 
+from outside of our network. We also do not run code on machines outside 
+of our network. We also house our own SFTP server (on another machine, 
+other than the Git server), for Dorito access to files mentioned in our 
+feedback.</p>
+<p><a href ="#top">Back to TOC</a></p>
+<!-- END Environment  -->
+<a name ="lifecycle"></a> 
+<h2>The Lifecycle</h2>
+<p><strong>Fall :</strong> Mock Seek Change, Mock Strawberry, Mock Apple, Mock Reports 
+<br>(only done internally),</p>
+
+<p>Live SeekChange, Live Strawberry, Live Apple, Live Reports, Late Reporting (Strawberry),
+<br>(per the contract, only Raspberry/Melon Retake, no Eggplants)</p>
+<br>
+<p><strong>Winter :</strong>  Mock Seek Change, Mock Strawberry, Mock Apple, Mock Reports 
+<br>(only done internally),</p>
+
+<p>Live SeekChange, Live Strawberry, Live Apple, Live Reports, Late Reporting (Strawberry),
+Closeout (Strawberry) </p>
+<br>
+<p><strong>Spring :</strong>  Mock Seek Change, Mock Strawberry, Mock Apple, Mock Reports 
+<br>(only done internally),</p>
+
+<p>Live SeekChange, Live Strawberry, Live Apple, Live Reports, Late Reporting (Strawberry),
+ Closeout (Strawberry)<br> Spring also has Satsuma (5 th and 8th grades).</p>
+<br>
+<p><strong>Summer :</strong> Mock Seek Change, Mock Strawberry, Mock Apple, Mock Reports 
+<br>(only done internally),</p>
+
+<p>Live SeekChange, Live Strawberry, Live Apple, Live Reports, Late Reporting (Strawberry),
+Closeout (Strawberry)</p>
+<p><a href ="#top">Back to TOC</a></p>
+<!-- END Lifecycle  -->
+<a name ="overall_process"></a>
+<h2>The Overall Process</h2>
+<p>The process starts with Seek and Change files. The paper-based tests are 
+seekned in by Pear and a Seek file is created. That file is then changeed 
+for accuracy and a separate Change file is created. Pear sends a 
+notification to Dorito and to us via e-mail, detailing the files available 
+and the correct path to said files located on their SFTP server. We 
+retrieve the files. The details of how that is done is in a later section
+(titled <a href="#getting_files">&quotGetting the Data Files&quot</a>).</p>
+
+<p>Once the Seek and Change files are approved by Dorito (after we verify them), 
+Pear creates an Strawberry file (which stands for REDACTED). 
+Pear sends another notification via email for the Strawberry files.</p>
+
+<p>Once the Strawberry files are approved, Pear then appleregates the results into 
+an Apple file (sometimes called an Starfruit file). Then, Pear creates six 
+reports, based on the Strawberry and Apple files.</p>
+
+<p>Lastly, Pear will generate some late reporting. This is the fault of 
+the school districts. This process may occur multiple times, but the 
+checking process differs only slightly from the normal process. </p>
+
+<p>The last thing that Pear will do (for Scoring and Reporting) is where 
+they combine all of the Strawberry's and Late Reporting Strawberry files together 
+(Closeout files) and it is checked one last time. After those files are 
+approved, Dorito asks us for Demonstration files, based upon those closeout 
+files. </p>
+
+<p>Demonstration is a completely separate process and code base from 
+scoring and reporting.</p>
+<p><a href ="#top">Back to TOC</a></p>
+<!-- END Overall Process  -->
+<a name ="clone"></a>
+<h3>Cloning our project</h3>
+<ol>
+<li>Open your Terminal window and Finder window.</li>
+<li>In Finder, create a folder called Projects in your User home directory.</li>
+<li>In Terminal, type in "git clone USER@SERVER:/home/USER/assessment-old.git"</li>
+<li>It will prompt you for a password. Find your Team Lead and they will 
+provide it for you if necessary.</li>
+</ol>
+<p><a href ="#top">Back to TOC</a></p>
+<!-- END Cloning project  -->
+<a name ="setup"></a>
+<h2>The Setup</h2>
+<p>Once you clone our project using git, you will notice several folders inside 
+of the assessment-old folder. Each year's administration is contained in a 
+folder. Our current administion is located in the 2014-2015 folder. Within 
+that folder is a single folder, "scoring_reporting". Within that folder 
+are the folders for our software. </p>
+
+<p>They are as follows: /bin, /config, /docs, /layouts, /lib, /maps, 
+<p>/pylib and /script. Let's take them one at a time.</p>
+
+
+<p>/bin: This contains the starting point of our program. It instantiates 
+a module called running.</p>
+
+<p>/config: This folder contains the supporting files (in .yml format) 
+that specify which files that particular subject uses for layouts, based
+on whether or not it is a seek or change file, an strawberry file, or an apple file.</p>
+
+<p>/docs: This one is confusing, as there is another docs folder further up 
+the directory tree. This particular docs folder contains the layouts and 
+maps subfolders that pertain to the CURRENT administration. The /docs 
+folder further up the tree contains documentation that is not 
+administration specific.</p>
+
+<p>/layouts: This is also confusing, as we just saw a layouts folder 
+inside the previous folder. This layouts folder contains the code files
+(in .yml format) pertaining to the layout of the data files, whereas 
+the /docs/layouts folder contains the Excel spreadsheets documenting which
+field is in which position. The contents of these two folders work 
+hand in hand.</p>
+
+<p>/lib: This contains a folder called bigdog, which contains the .rb files 
+that we modify, based upon the layouts as well as the rules, which is 
+based upon the specification document. This is where the rules are changeed.
+It's also where the program files are actually stored.</p>
+
+<p>/maps: This folder is similar to the /layouts folder in terms of 
+confusion. Like the layouts folder, its counterpart is in /docs/maps. 
+The /maps folder contains .csv files, derived from the .xls files found 
+in /docs/maps. Our code uses the .csv files to verify that the answers are 
+correct for each of the test questions.</p>
+
+<p>/pylib: Like /lib, this folder contains the Python code that we run for 
+certain portions of the process. It also contains some layout information 
+as well, so we'll have to verify that it's current, based on the layouts 
+given to us each term.</p>
+
+<p>/script: This is the actual starting point for running our code. 
+Run.sh contains the commands, options, and modes used to check the data 
+files for accuracy and, as an aside, serves as a historical record of 
+which processes have been run on which data files and which versions of 
+said data files. It also contains the sftp.sh script, which allows us 
+access to Pear's SFTP server.</p>
+
+<p>/test: This folder contains .rb files which do testing for our code to 
+double check that we are getting the right results that we expect and to 
+verify that we get error messages when we pass in the wrong information.</p>
+
+<p>There are other folders which are mandatory for the process to work 
+correctly. You will need to create them if they don't exist.</p>
+
+<p>/data: This is where you will store the data files while we are checking 
+them. It should contain two subfolders, "strawberry_durian" and "satsuma_date".  These 
+subfolders are used in a very minor capacity during the Reports portion of 
+our process.</p>
+
+<p>/ChangeStrawberryCompare: This folder is used as part of a Python process that 
+compares the Change file to the Strawberry file- the process writes its output to 
+this folder. It is OVERWRITTEN each time you run that process, so you will 
+need to do that aspect of the checking process one by one, saving the 
+output to a separate folder outside of the project. I have a 
+Feedback_Issues folder on my Desktop for this exact purpose.</p>
+
+<p>/SeekChangeCompare: This folder is similar to the above folder, only it's 
+used for comparing the Seek file to the Change file. It behaves in the same 
+fashion, so copy that output before you run the next Python process for 
+the next data file.</p>
+
+<p>/out: This folder is only used for reports. The code for the reports 
+that we generate outputs the pdf to this folder. SOME of the reports 
+will overwrite the output as you process each grade, while others will 
+not. You will have to look at the output section of the code to see 
+whether or not there is a grade field. If it overwrites the .pdf, then you 
+will have to rename it, adding the grade to the filename, before running 
+the next report.</p> 
+
+<p><a href ="#top">Back to TOC</a></p>
+<!-- END Setup -->
+<a name ="getting_started"></a>
+<h2>Getting Started</h2> 
+<p>Typically, we start at the Seek /Change phase. The first step is to look at 
+the config files, found in /config. At this point, lets' look at the naming
+convention. Currently, there are three files: rmfrt_seek.yml, rfrt2_strawberry.yml 
+and rfrtcbt2_strawberry.yml.</p>
+<pre>
+R-raspberry
+M-melon
+M4-Melon 4th Grade
+RT-Retake
+CBT-Computer Based Test
+F-Fall
+Wx-Winter (e.g. wa_eggplant.yml - means Winter Apricot)
+A-Apricot
+B-Banana
+C-Cherry
+G-Grape
+H- Honeydew
+S-Satsuma
+W-Watermelon (e.g. w_seek.yml- means Seek file, Watermelon) 
+</pre>
+<p>Spring and Summer are wrapped into the normal files (e.g. rmrt_seek.yml).</p>
+
+<p>We want the rmfrt_seek.yml file (Raspberry Melon Fall Retake Seek file 
+configuration). Open that and you'll see that it's broken down into 
+sections. They are:  batch header, school header, student and unscorable. 
+There may be some other information there underneath that (like 
+Achieve Table or Dev Score), but we can safely ignore 
+that for the time being. </p>
+
+<p>The batch header is where we'll start. The config file for your particular 
+subject will tell you which layout files to open. </p>
+<p><a href ="#top">Back to TOC</a></p>
+<!-- END Getting Started  -->
+<a name ="changing_layouts"></a>
+<h2>Changing Layouts</h2>
+<p>Next is to examine the layouts. They are inside of the /docs/layouts folder.
+ The folder structure is broken down by type of file, then within that, 
+ season (Fall, Winter etc.). Open the BatchHDR file. Also open the ruby 
+ layout file, in this case, frt_seek_batch_header.yml.</p>
+
+<p>Things to pay attention to are the Start and End positions for each of the 
+fields. Where this makes sense is the understanding that the data files 
+that we are given from Pear are position based. That is, the Record 
+Type field is at Column 1 in the data file and it's value ends at 
+Column 2. In the ruby layout file, verify that record_type has the same 
+values for start and end positions. 
+(e.g. !ruby/sym record_type: [10, 11, !ruby/regexp "/GK/"] and observe 
+the /GK/ value. According to the BATCHHDR.rtf, the value of RECORD TYPE 
+should be GK. This is our regular expression confirming that.</p>
+
+<p>At this point, you would verify 1) the start/end positions match between 
+the ruby code and the layout, 2) the regular expression is correct for the 
+values that we are expecting (based upon the layout), and 3) that each 
+field in the layout is mentioned in our ruby code. On this last point, 
+some of the fields are labelled as filler. Filler is NOT a data record. It 
+creates spaces to make the data file a bit easier to read.</p>
+
+<p>One interesting thing is the use of aliases.</p>
+
+<code>
+Ex.!ruby/sym batch_num: [37, 40, &n_l4 !ruby/regexp "/[0-9]{4}/"]
+!ruby/sym stack: [42, 55, *n_l4]
+</code>
+<p>Here the &n_l4 !ruby/regexp "/[0-9]{4}/" is creating an alias called n_l4 
+(which means numbers 0-9 with a length (l) of 4. It happily gets used right 
+below. On some ruby layout files, the alias get's used more than once. 
+This is designed to cut down on the amount of code and adheres to Ruby's 
+DRY principle. The alias is defined with an & and used with an *.</p>
+
+<p>Another would be a bit of Ruby convention that we use:</p>
+
+<code>
+!ruby/sym cat_points_possible: 
+[497, 504, &possible !ruby/regexp "/09|10|21|27|55|62/", 2]
+</code>
+<p>This means that for the fields cat_points_possible (of which there are 
+FOUR), we are looking for the  values listed in the regular expression. 
+We are starting at position number 497 and looking at the values 2 at a 
+time, until we stop at position 504. That's the significance of the &quot,2&quot 
+after the regular expression.</p>
+
+<p>NOTE: You can test your regular expression by typing &quotirb&quot in your Terminal window. irb stands for Interactive Ruby.</p>
+  <p>Then type in something like the following:</p>
+  <pre>
+    a="4"
+    a=~/[1235]/
+  </pre>
+  <p> It should return nil.</p>
+  <p>For the example a=~/[1235]/, it means, does a (which we defined a moment ago) MATCH the regular express 1235?</p>
+  <p> If the answers is no (or false), it returns nil. If it's yes (or True), then it will return 0.</p>
+<p><a href ="#top">Back to TOC</a></p>
+<a name ="tests"></a>
+<h3>Tests</h3>
+<p>After updating the layouts for a given subject, you will need to go into 
+the corresponding test files (located in /test ) and update the test to 
+reflect the changed values from the layouts. Upon completing that step, in 
+your Terminal, run “rake test”  to verify that all of the tests work 
+properly. If you only changed one test file, you could simply run that one
+file instead. e.g. ruby test_seek_expressions.rb</p>
+<p><a href ="#top">Back to TOC</a></p>
+<!-- END Changeing Layouts  -->
+<a name ="test_cases"></a>
+<h3>Test Cases</h3>
+<p>(our example is from test/test_eligible_ape_rules.rb)</p>
+<p>The first part of our test is setting up a simulated datafile. We provide 
+an entry with correct values, and then one with incorrect values.</p>
+<pre>
+    setup do
+      @ape_list = {"1234567890" => "1",
+                   "          " => "1"}
+      @preid_barcode = { '001' => { preid_barcode: '1234567890' },
+                         '002' => { preid_barcode: '          ' } }
+    end
+    
+    
+    Then, we put in values that are a success
+    
+    should 'return nil when the rule succeeds' do
+      assert_equal BigDog::EligibleApeRules.run(@ape_list,
+                                               "1",
+                                               "1234567890",
+                                               "1"), nil
+    end
+    
+    Then we provide values that should fail the test
+    should "return a properly populated results hash when the rule fails" do
+      result = BigDog::EligibleApeRules.run(@ape_list,
+                                           " ",
+                                           "          ",
+                                           "1")
+                            
+                            
+                            </pre>
+<p>and finally, we provide a mechanism to show us a result hash when it fails</p>
+<pre>
+      assert_kind_of Hash, result
+      assert_equal 5, result.size
+      assert_equal :eligible_ape_rules, result[:name]
+      assert_equal "1", result[:calc_eligible_ape]
+      assert_equal " ", result[:eligible_ape]
+      assert_equal "          ", result[:preid_barcode]
+      assert_equal "1", result[:score_status]
+    end
+</pre>
+<p>Note that the "assert_equal "          ", result[:preid_barcode]" in the 
+result hash matches the  "          ", in failure section. If not, then it 
+will not fail the test.</p>
+
+<p> After you finish modifying the test cases, test them out by typing in &quotrake test&quot. If there's a failure, it should spit out something like this:</p>
+<p><em> The following examples are from test/test_eggplant_expressions.rb </em></p>
+<pre>
+  # Running tests:
+
+  ......................................................................................F....................................................................................................................................................................................
+
+  Finished tests in 0.183657s, 1453.7970 tests/s, 40793.4356 assertions/s.
+  
+   1) Failure:
+  test: regular expressions in the weggplantpbt layout should match and fail to match properly. (TestEggplantExpressions) [/Users/bvagnini/Projects/assessment-old/2014-2015/scoring_reporting/test/test_eggplant_expressions.rb:250]:
+  Expected "    " to not match /[\d\s]{4}/.
+</pre>
+<p> This means that the layout changed (something that you changed, but forgot about), but the test case is 
+  expecting something else. Change an assert to a refute or vice versa and the problem should be resolved.</p>
+<p>If there's an error, it should spit out something like this:</p>
+<pre>
+  # Running tests:
+
+  .....................................................................................EF....................................................................................................................................................................................
+
+  Finished tests in 0.180790s, 1476.8516 tests/s, 38010.9519 assertions/s.
+
+    1) Error:
+  test: regular expressions in the weggplantcbt layout should match and fail to match properly. (TestEggplantExpressions):
+  NoMethodError: undefined method `[]' for nil:NilClass
+      /Users/bvagnini/Projects/assessment-old/2014-2015/scoring_reporting/test/test_eggplant_expressions.rb:289:in `block (3 levels) in <class:TestEggplantExpressions>'
+      /Users/bvagnini/.rbenv/versions/1.9.3-p545/lib/ruby/gems/1.9.1/gems/shoulda-context-1.1.1/lib/shoulda/context/context.rb:400:in `call'
+      /Users/bvagnini/.rbenv/versions/1.9.3-p545/lib/ruby/gems/1.9.1/gems/shoulda-context-1.1.1/lib/shoulda/context/context.rb:400:in `block in create_test_from_should_hash'
+
+    2) Failure:
+  test: regular expressions in the weggplantpbt layout should match and fail to match properly. (TestEggplantExpressions) [/Users/bvagnini/Projects/assessment-old/2014-2015/scoring_reporting/test/test_eggplant_expressions.rb:157]:
+  Expected " " to match /Y\s/.
+  
+</pre>
+
+<p> The nil:NilClass error simply means that, for the yml file that you are inspecting with this particular test case, 
+  the field doesn't exist in the yml file, but you are asking the test case to check it. Comment it out and re-run. The error should disappear.</p>
+  
+  <p>NOTE: The test case will halt on the FIRST error that it finds; it will not report all errors  that it finds. This means that you will have to re-run rake test multiple times to find each issue.</p>
+  
+<p>If there's NO errors or failures, it will output this:</p>
+<pre>
+  # Running tests:
+
+  ...........................................................................................................................................................................................................................................................................
+
+  Finished tests in 0.185646s, 1438.2211 tests/s, 40388.6968 assertions/s.
+</pre>
+
+<p><a href ="#top">Back to TOC</a></p>
+<!-- END test cases -->
+<a name ="maps"></a>
+<h3>Generating Maps</h3>
+<p>We open the Excel spreadsheets (using 
+LibreOffice) that Dorito provides (from /docs/maps) and Save As as a CSV file, with the tilde ( ~ ) as the separator. You will have to physically type in the tilde character, as it 
+is not available from the dropdown list of field separators. The tilde is crucial, as that's how our program knows 
+when the next field starts. We change the name of the file to something like a.csv (where a stands for Apricot, the course name) and save it in 
+the /maps folder (vs. the /docs/maps folder).</p>
+<p>Ensure that there are NO spaces before or after the field name and there is not a carriage return within the field name (e.g. someone at Pear hit the Enter key). The easiest way to see this
+is to open the generated .csv file within Textmate. The field names should occupy a single row, with no spaces (e.g. ~field~field~field~).
+</p>
+
+<p>After making any changes to the Ruby code layouts, maps, and test cases, 
+you'll need to check in your code.</p>
+<p><a href ="#top">Back to TOC</a></p>
+<!-- END Maps -->
+<a name ="check_in_code"></a>
+<h2>Checking in your code</h2>
+<p>In the Terminal, type in &quotgit status&quot. It should display a list of 
+files that are modified in red.</p>
+
+<p>&quotgit add .&quot will add any modified files to your local working directory.</p>
+<p>&quotgit status&quot to confirm. The list of modified files should change to green.</p>
+<p>&quotgit commit -m &quotUpdate Fall RT layouts.&quot &quot Note that the commit 
+messages are always in present tense and that they are short but 
+descriptive and are a complete sentence.</p>
+
+<p>Git should now show you the number of files changed.</p>
+<p>&quotgit status&quot should now reveal 
+&quotnothing to commit, working directory clean&quot</p>
+
+<p>At this point, you need to see what portions of the codebase have been 
+changed by others.</p>
+
+<p>&quotgit fetch origin&quot</p>
+
+<p>If there are changes committed by others, it will show a new HEAD. If 
+that's the case, you will need do a pull request via 
+&quotgit pull origin develop&quot and merge your code together. Otherwise, do 
+a push with &quotgit push origin develop&quot (you are pushing your develop 
+branch to origin's develop branch.)</p>
+
+<p>It will display something like this: 
+To USER@SERVER:/home/USER/assessment-old.git 269dda8..0b718e3 
+develop -> develop</p>
+
+<p>Confirm that your code is there with &quot<code>gitk --all</code>&quot. NOTE: You will 
+have to close out of Wish (which is the program running <code>gitk --all</code>), 
+before you are allowed access to 
+your Terminal command prompt again.</p>
+
+<p>Repeat the process for the Strawberry and Apple files as the layouts become 
+available. Remember, prior to changing any code, execute a 
+&quotgit fetch origin&quot command first. Someone may have already fixed the 
+issue you were about to work on.</p>
+
+<p><a href ="#top">Back to TOC</a></p>
+<!-- END Check in Code -->
+<a name ="verification"></a>
+<h3>Verification Process</h3>
+<p>There are cases where we either have to split the files (e.g. they gave us 
+a combined file for Raspberry and Melon, but we are checking the subjects 
+individually, or more commonly, we split between computer based (cbt) and 
+paper based (pbt)) OR we have to combine files together (e.g. they gave us 
+several different files that make up the Seek file).</p>
+
+<p>We either use an awk script to split or a cat to combine the files together. 
+Examples of these are located in the run lines. Assuming that we now have 
+the file(s) in the right form, we continue on.</p>
+
+<p>Our program goes and extracts certain fields, based upon what our layout 
+file says (which is based upon what the Dorito supplied layout files say), 
+and our program reads in those values.</p>
+
+<p>Then our program compares the value read against the value it's expecting 
+to see (via Regular Expressions) and reports any errors that it finds. In 
+other cases, we are looking to one field for a certain value (a Y, for 
+example), and based upon the rules outlined in the Specification (and 
+defined in the ruby files in /lib/bigdog), we calculate the value of a 
+different field, comparing that calculated value against the actual value 
+in the data file. Again, we report any errors as either output to the 
+terminal window or as a file inside of a folder with the same name as the 
+data file we are checking.</p>
+
+<p>The next step after that is to verify that the errors are NOT in our code, 
+but rather with the data file. This may be done by opening the data file 
+in either Textmate or in Vim. Errors in our code could be the result of a 
+rule change, an incorrect layout position, an incorrect layout regular 
+expression value, a typo...basically a lot of things. Most likely though, 
+it will be some value that changed in the provided layout that didn't get 
+changed in the Ruby layouts.</p>
+
+<p>Once the code is corrected, re-run it and you should see some output in 
+your Terminal session. You should generally see folders in your 
+“scoring_reporting” folder with the filename you ran the program 
+against as the folder name. You will need to examine the contents of 
+those folders for any errors.</p>
+<p><a href ="#top">Back to TOC</a></p>
+<!-- END Verification -->
+<a name ="strawberry"></a>
+<h2>Running an Strawberry file</h2> 
+<p>1- Update the Config file, achievement table / third table, score table/dev score, and passing score and category table (for Melon). 
+[/scoring_reporting/maps vs. /lib/bigdog/maps.rb]
+(original Dorito provided maps are in scoring_reporting/docs
+/maps/SUBJECTNAME/SEASON)</p>
+
+<p>2- Check the class map to make sure that all the columns of the map match 
+with our code. Verify that the column names in our code match the spelling 
+of the column names in the Dorito provided map (see above)
+- Spelling counts: Case doesn't.</p>
+
+<p>3- Update the student class accordingly (e.g. Raspberry Strawberry Student or 
+Banana Eggplant Student).</p>
+
+<p>4- Run the awk script to split the combined course data file into a pbt 
+version and cbt version. This is in run.sh. Do this for ALL items. This 
+will create 2 files: FILENAME_cbt.txt and FILENAME.pbt.txt in the /data 
+folder. Use these files when running the Strawberry Checks, not the original Dorito 
+provided data file. For the Dupes check, use the original Dorito provided 
+data file.</p>
+
+<p>5-Check that the map is being read correct by putting a “pp map” 
+statement in the Eggplant_Checker.rb (line 27) or the Strawberry_Checker.rb file. 
+Run the run.sh file and press CTRL+C shortly afterwards to stop running it.
+Compare the map files and Sequence numbers etc. This is done the FIRST 
+time we check that particular course map . Subsequent iterations will not 
+need this step, nor step 6.</p>
+
+<p>6-Remove the pp map statement (or comment it out).</p>
+
+<p>7- Run the run.sh file again. Verify that our code is correct prior to 
+reporting to Dorito. If necessary, look at the actual data file to verify 
+that the column/field numbers are correct.</p>
+
+<p>8- After running our program, it will output three folders: 
+FILENAME_cbt.txt, FILENAME_pbt.txt,and FILENAME.txt. 
+This is a result of the two Checks and one Dupes process. These folders 
+contain the output of any errors or issues that you may find. You may want 
+to hang onto these folders until Dorito approves the files in question, just 
+in case they ever come back with a question about what you've discovered. 
+This output is also what you will verify in the actual data file. 
+Occasionally, our code is incorrect and we have to make an adjustment to 
+it, then re-run the files again. Above all else, remember that our goal is 
+NOT to match Pear's results, but to verify (via the specification 
+document and the contract) that Pear is doing THEIR job correctly. </p>
+
+<p>For Strawberry files, we also run a Python process called change_to_strawberry.py ONE AT A
+TIME, as the process will overwrite the contents of your /ChangeStrawberryCompare 
+folder.</p>
+
+<p>In any case, we report our findings to Dorito via email. In some cases, we 
+will post certain files (e.g. Change-to-Strawberry output, or Seek-to-Change output) 
+to our SFTP site for Dorito to follow up on.</p>
+
+<p>Check in your code. 
+<p><a href ="#top">Back to TOC</a></p>
+<!-- END Strawberry -->
+<a name ="verify_output"></a>
+<h3>Verifying Output</h3>
+<p>Sometimes you have to open the actual data file within Textmate or Vim. In 
+most cases, our output will supply you withthe PAS in question. If the 
+field is the PreID or perhaps the Lithocode, then the output will supply 
+that information. You can then search for that in the data file.</p>
+
+<p>In Textmate, Apple + F opens the Find dialog box (for when you need to 
+verify that there actually two duplicate PreID Barcodes, for example).
+You can double-click on the results found and it will take you to that 
+exact spot. In some cases though, you need to be able to verify that the 
+pattern that it found is actually in the correct postion. This is done via 
+opening up the layouts (from the /docs/layouts/TASK folder) OR you can 
+open another instance of Terminal (Apple + T) and do a grep 
+(e.g. "grep preid layouts/*.yml"). This will let you know which position 
+the duplicate field in question is at. At this point, within Textmate, you 
+can go to Navigate > Go to Line (or Apple +L) and specify the exact line 
+number and column number (e.g. 96037:212).</p>
+
+<p><a href ="#top">Back to TOC</a></p>
+<!-- END Verify Output -->
+<a name ="output_gotcha"></a>
+<h3>Gotchas</h3>
+<p>1- Sometimes, you will get output like this:</p>
+<code>
+./script/run.sh
+Running appleregate file checks...
+/Users/bvagnini/Projects/assessment-old/2014-2015/scoring_reporting/lib
+/bigdog/running.rb:318:in `initialize': No such file or directory - 
+data/IRS1XSBY0a.txt (Errno::ENOENT)
+	from /Users/bvagnini/Projects/assessment-old/2014-2015/scoring_reporting/
+  lib/bigdog/running.rb:318:in `open'
+	from /Users/bvagnini/Projects/assessment-old/2014-2015/scoring_reporting/
+  lib/bigdog/running.rb:318:in `each_line_with_progress'
+</code>
+<p>etc.</p>
+
+<p>What's happening here is a common, but simple mistake. The file that you 
+are trying to run our program against doesn't exist. This is usually due 
+to a copy/paste error, where you forgot to change the filename, or in the 
+process of changing the filename, you enter a typo (extra space, remove 
+a _). It looks scarier than it is. Just confirm the filename and it will 
+work just fine.</p>
+
+
+<p>2- When you are viewing the output from a check done on a split file 
+(meaning the Raspberry PBT file), you should verify that output by opening 
+and checking the split Raspberry PBT file, and not the main data file, as 
+the line numbers in the output won't match up at all.</p>
+<p><a href ="#top">Back to TOC</a></p>
+<!-- END output gotcha -->
+<a name ="apple"></a>
+<h2>Eggplant Apple</h2>
+
+<p>Look at individual course files (e.g. config/a_eggplant.yml) This will give you 
+the layout files for Apple tasks.</p>
+
+<p>Update the regular expressions in the relevant files first. Use the layout 
+in /docs/layouts/apple/eggplant/spring for guidance.</p>
+
+<p>Next is to update the rules.</p>
+
+
+<p>CODE</p>
+<p>1) /config/SUBJECT LETTER_strawberry.yml</p>
+<p>/layouts/eggplant_apple.yml # check fields and reg exp against layout </p>
+<p>/layouts/abgh_apple.yml #the new class (e.g. cherry or c_apple.yml) will have 
+it’s own layout, not a shared one </p>
+
+<p>2) /lib/appleregator.rb # check rules against spec and layout</p>
+
+<p>LAYOUTS</p>
+<p>/scoring_reporting/docs/layouts/apple/eggplant/spring</p>
+
+<p>-Eggplant Strawberry-</p>
+<p>CODE</p>
+<p>/config/[subject letter]_eggplant.yml</p>
+<p>/config/[subject letter]cbt_eggplant.yml</p>
+
+<p>LAYOUTS</p>
+<p>/scoring_reporting/docs/layouts/strawberry/eggplant/SEASON</p>
+
+<p>Change test_eggplant_expressions.rb to match changed layout files.</p>
+<p>(&quotrake test&quot will help you chase them down)</p>
+<p><a href ="#top">Back to TOC</a></p>
+<!-- END Apple -->
+<a name ="rules"></a>
+<h3>Rulesets</h3>
+
+<p>Rulesets get called from other files within our process. For example, we 
+have this snippet from raspberry_retake_ruleset.rb:
+<pre>
+  @results.clear
+  add_result EligibleApeRule.run(@ape_list, student[:eligible_ape],
+                                student[:last_name], student[:first_name],
+                                student[:student_id], 
+                                student[:preid_barcode], 
+                                student[:score_status])
+      @results
+    </pre>
+<p>Observe the number (7) and the order of the arguments for EligibleApeRule.run. 
+This will match up exactly to the &quotdef self.run(ape_list, eligible_ape, 
+student_last_name, student_first_name, student_id, preid_barcode, 
+score_status)&quot section of eligible_ape_rule.rb. If the arguments aren't 
+correct, you will get a &quotwrong number of arguments (6 for 7) 
+(ArgumentError)&quot when you attempt to run the code.</p>
+
+
+<p>In each portion of the code (that is a ruleset), we want to get certain 
+output. This is accomplished with this section of code below:</p>
+<pre>
+  result_data = { :name => :eligible_ape_rule,
+                  :calc_eligible_ape => calc_eligible_ape,
+                  :eligible_ape => eligible_ape,
+                  :score_status => score_status,
+                  :student_last_name => student_last_name,
+                  :student_first_name => student_first_name,
+                  :student_id => student_id,} if calc_eligible_ape 
+                  != eligible_ape
+</pre>
+<p>The output that it generates looks like this:</p>
+<pre>
+line, id, [:calc_eligible_ape, :eligible_ape, :score_status, :student_last_name, :student_first_name, :student_id]
+2614, C21674768, [" ", "1", "1", "JAMES            ", "JESSE     ", "123456789X"]
+2615, C26687520, [" ", "1", "1", "JAMES           ", "FRANK     ", "987654321X"]
+</pre>
+<p>This output creates a file called eligible_ape_rule.ftl in the 
+FILENAME.txt folder. That's the purpose of the 
+&quot:name => :eligible_ape_rule,&quot section.</p>
+<p>Everthing else below it becomes the column headers in the resulting hash.</p>
+
+<p>Check in your code. </p>
+<p><a href ="#top">Back to TOC</a></p>
+<!-- END Rules -->
+<a name ="contract_rules"></a>
+<h3>Mapping Rules to Specific Contract lines</h3>
+<p>We start at pg 7 of 21 pages. The header to look for is &quotVerification of Seek Files (original and post-change file)&quot. 
+  This lists the tasks for each section (Seek/Change, Strawberry etc.) While the original contract used bullets (not numbers), 
+  we will be assigning a number to each of the bulleted items. For example, Strawberry and Durians have 28 rules total 
+  (20 on pg 7 and the remaining 8 on pg 8). </p>
+  <p>Seek and Change have no rules. Everything there (all 4 items ) is done through different parts of the program. RE-WRITE ME WITH CORRECT INFO!!</p>
+  <p>Strawberry/Durian section has the bulk of the rulesets.</p>
+  <pre>
+    1 running.rb → check (wa_eggplant) : verify valid values from layout
+    2 change_to_strawberry_check.py : verify change to Strawberry check, find missing litho, indentify changes
+    3 eggplant_score_status_rule.rb : verify score flags properly set.
+    4 McScoredItemRule.rb : very multiple choice, FrScoredItemRule.rb: fillin response
+    5 eggplant_raw_score_rule.rb ,EggplantCatPointsEarnedRule.rb : verify total raw/sub scores 
+    6 achievement_rule.rb : verify level is correct, based on scale/score dev/scale score
+    7 eggplant_passing_indicator_rule.rb : verify pass/fail indicator is correct, based on scale/dev score
+    8 report_status_code.rb : verify report status code / score flag are consistent.
+    9 school_type_rule.rb : verify school type  ReportReceivedCodeRule.rb : status codes 
+    10 curriculum_group_rule.rb /standard_curriculum_code_rule.rb : verify group code is corret
+    11 race_code_rule.rb : Verify reported race field is correct
+    12 accomodation_code_rule.rb : verify large print/Braille records =  have Y accommodation codes 
+    13 pex_section504_code_rule.rb : check braille and large print records pex /= blank or sect 504 = Y
+    14 running.rb → check dupes: verify no sec barcodes are missing when ans doc = sec doc
+    15 running.rb → check dupes: verify no print after seek #, litho codes = missing, when doc = seekned
+    16 weggplantpbt.yml (regex) : dob ruby/sym → verify century in virthdates have been set properly
+    17 running.rb → check dupes: verify no dupes 
+    18 FillinItemChangesRule.rb : verify gridded / fill-in responses 
+    19 n/a
+    20 n/a (no calib file)
+    21 EggplantScaleScoreLowerBoundRule.rb / EggplantScaleScoreUpperBoundrule.rb: Verify up/low scalescore.
+    22 strawberry_to_durian.sh → run seperately : verify same data in Strawberry to Durian
+    23 n/a
+    24n /a
+    25 n/a
+    26 n/a
+    27 n/a
+    28 n/a
+  </pre>
+  <p>For Winter 2014 Eggplant Strawberrys, the only rulesets that come into play are the following: </p>
+  <pre>
+    winter_abgh_eggplant_ruleset.rb which calls:
+      achievement_rule.rb
+      eggplant_passing_indicator_rule.rb
+
+     Winter_Eggplant_Ruleset.rb which calls:
+       EggplantScaleScoreLowerBoundRule
+       EggplantScaleScoreUpperBoundRule
+       ReportStatusCodeRule
+       ReportReceivedCodeRule
+       StandardCurriculumCodeRule
+       RaceCodeRule
+       AccomodationCodeRule
+       PexSection504CodeRule
+       McScoredItemRule
+       EggplantScoreStatusRule
+       FillinItemChangesRule
+       FrScoredItemRule
+       SchoolTypeRule
+       CurriculumGroupRule
+       EggplantRawScoreRule
+       EggplantCatPointsEarnedRule
+  </pre>
+  <p>At this time, Apple rulesets have NOT been mapped to their contract bullet items (112114).</p>
+<p><a href ="#top">Back to TOC</a></p>
+<!-- END Rules to Contract -->
+<a name ="getting_files"></a>
+<h2>Getting the data files</h2>
+<p><a href ="#overall_process">Back to Overall Process</a></p>
+ <p>At this point, the layouts have been adjusted. We receive an email from 
+ Pear stating:</p>
+ 
+<p>&quotFall 2014 Retake Mock Seek and Change&quot </p>
+
+<p>The email should contain the path to where the files are located on their 
+SFTP server. It may look something like this: </p>
+
+<p>/test-materials/Test Administration/Scoring and Reporting/Dorito to FSU Cheerio/Fall 2014 Retake</p>
+
+<p>In your Terminal session, type in &quot./script/sftp.sh&quot. This will open a 
+session with Pear's FTP server using Sweta's credentials. 
+(There are three sets but we only need to use one at the time.) Switch 
+back to your email and copy the path to the files that you want. </p>
+
+<p>Switch back to your Terminal session and type in &quotcd&quot and paste the 
+path. Since there are spaces in the path for Pear's FTP and *nix 
+systems don't really allow for spaces, your command should have quotes 
+around the path section. </p>
+<p>e.g. 
+cd &quot/test-materials/Test Administration/Scoring and Reporting/Dorito to FSU Cheerio/Fall 2014 Retake&quot</p>
+
+<p>Do an &quotls -a&quot to verify the files existence.</p>
+<p>At this point, you can type in &quotget *.*&quot and it will download the 
+files to your &quotscoring_reporting&quot folder. In some cases (particularly 
+during reports, where the files we want are in a folder called &quotFiles&quot 
+and in &quotReports&quot), it is more advantageous to type this in instead:</p>
+
+<p>&quotget -r Files&quot or &quotget -r Reports&quot</p>
+
+<p>This will create the &quotFiles&quot folder in your &quotscoring_reporting&quot 
+folder and download the contents into the newly created folder. 
+NOTE: You MUST move the files/folder out of your &quotscoring_reporting&quot 
+folder (maybe place them on your Desktop?), prior to attempting to copy 
+the files into our code server (for everyone to have access to.) The 
+reason is, is that Git is tracking those files and it causes an issue 
+while copying, since the file is &quotin use&quot. </p>
+
+<p>At this point, open a connection to our code server (called &quotCatkin&quot). 
+You do this by clicking on 
+Go >Connect to Server
+in the Finder. The server that you want is &quotcifs://catkin/files&quot. If 
+you don't have access to this folder, please let the System Administrator 
+know and they will add you to the list of allowed users. The folder 
+structure for this server is broken down by either task 
+(e.g. &quotAccountability 2014 Files&quot) or by season (e.g. &quotFall 2014 
+Retake&quot). Within that folder, you should see a folder called &quotLive Data
+Files&quot, and within that, folders such as &quotSeekChange&quot and &quotStrawberry-Starfruit&quot. 
+(there's a LOT of drilling down to the folder that you want.)
+Once you've figured out where to put it, paste the downloaded files. They 
+will now be available for everyone to use. </p>
+
+<p>One point of clarification: You will not see the git repos listed in this 
+view, even though the git repo is stored on Catkin. Not to worry, git can 
+see the repo and that's all that really matters. By the way, the git repo 
+is backed up once a week (even though the code is on multiple machines) 
+and that backup is transferred to an offsite location for safe-keeping. 
+Your hard work will NOT disappear due to a hard disk failure. </p>
+
+<p><a href ="#top">Back to TOC</a></p>
+<!-- END Getting Files -->
+<a name ="reports"></a>
+<h2>Reports</h2>
+<p>This is the portion of the project where you will involve other Cheerio staff 
+besides the Programmers. The other members will be comparing the Pear 
+generated report, against the Cheerio generated report.  There are six types 
+of reports generated through FRUIT. </p>
+
+<p>They are as follows:</p>
+<pre>
+Individual Student Reports (ISR) – these go to the schools to be mailed out to the Student's parents.
+State Summary (SS)- 
+State Report of Districts (SRD)-
+District Summary (DS)-
+District Report of Schools (DRS)-
+School Report of Students (SRS)-
+</pre>
+<p>Everything except for the ISR's are considered to be &quotEducator 
+Reports&quot, since the students/parents will never see them. The Schools, 
+School Districts and Dorito will use those reports. We get the ISR, or 
+Individual Student Report, via Fedex in boxes. </p>
+<p><a href ="#top">Back to TOC</a></p>
+<!-- END Reports -->
+<a name ="pearson_reports"></a>
+<h3>Obtaining Pear's Reports</h3>
+<p>You will get an e-mail and download the reports in the same fashion that 
+you download the other files. The filenames will come in two different 
+flavors:</p>
+
+<p>Eggplant_SUM14_55_SRS_ALG1_DIST_WAVE1.pdf and 
+Eggplant_SUM14_550411_SRS_ALG1_SCHL_WAVE1.pdf</p>
+ 
+<p>When you print out their reports to check, we only want the first file, 
+not the second. The second is specifically for District 55, School 0411. 
+We only care at the District level.</p>
+
+<p>Place the Reports (and Files- they are used for something else), in Catkin 
+in the approriate Season folder. </p>
+<p><a href ="#top">Back to TOC</a></p>
+<!-- END Pear Reports -->
+<a name ="generating_reports"></a>
+<h3>Generating our reports</h3>
+<p>The run lines for these look like this:</p>
+<pre>
+#ruby -I lib bin/bigdog --mode rfrtpbt_strawberry --report isr --districts 65,67 --file IRS1XSBY0a.txt
+#ruby -I lib bin/bigdog --mode mfrtpbt_strawberry --report isr --districts 65,67 --file IRS1XSBY0a.txt
+#ruby -I lib bin/bigdog --mode rfrtpbt_strawberry --report ss --apple_file IRS1XAPL0a.txt
+#ruby -I lib bin/bigdog --mode mfrtpbt_strawberry --report ss --apple_file IRS1XAPL0a.txt
+#ruby -I lib bin/bigdog --mode rfrtpbt_strawberry --report srd --apple_file IRS1XAPL0a.txt
+#ruby -I lib bin/bigdog --mode mfrtpbt_strawberry --report srd --apple_file IRS1XAPL0a.txt
+#ruby -I lib bin/bigdog --mode rfrtpbt_strawberry --report ds --apple_file IRS1XAPL0a.txt
+#ruby -I lib bin/bigdog --mode mfrtpbt_strawberry --report ds --apple_file IRS1XAPL0a.txt
+#ruby -I lib bin/bigdog --mode rfrtpbt_strawberry --report drs --districts 05,17,45,56 --apple_file IRS1XAPL0a.txt
+#ruby -I lib bin/bigdog --mode mfrtpbt_strawberry --report drs -->districts 05,17,45,56 --apple_file IRS1XAPL0a.txt
+#ruby -I lib bin/bigdog -->mode rfrtpbt_strawberry --report srs --districts 05,17,45,56 --file IRS1XSBY0a.txt
+#ruby -I lib bin/bigdog --mode mfrtpbt_strawberry --report srs --districts 05,17,45,56 --file IRS1XSBY0a.txt
+</pre>
+<p>One thing to notice is that for the ISRs, DRSs and SRSs, you have to 
+specify which districts. For the ISRs, this decision is made by Pear. 
+They will generate reports for all 70(?) districts, but will only ship us 
+two districts to check (usually via UPS or Fedex). You will have to open 
+the boxes to figure out which districts to print out. They usually send us 
+District 65 and 67, but it does vary from time to time.</p>
+
+<p>For the DRS and SRS, we typically choose four districts to check; two 
+large and two small. We usually pick the same four districts to simplify 
+things. </p>
+<p>Every once in a while, we have to specify a different district. This is 
+usually due to no reports generated for a particular subject within that 
+district </p>
+(e.g. Kids took Raspberry, but not Melon.) Since Raspberry and Melon are usually 
+reported together, we would have to pick a different district.</p>
+
+<p>The other thing to note is that the ISR and SRS reports (both of which 
+pertain to actual student information), use the Strawberry file. All other reports 
+use the Apple file.</p>
+<p>Be careful when copying and pasting to remember to change the mode from 
+a_eggplant to b_eggplant when it's for Banana and you copied the Apricot lines.</p>
+<p><a href ="#top">Back to TOC</a></p>
+<!-- END Generating Reports -->
+<a name ="tech_note"></a>
+<h3>Technical note:</h3>
+<p>In the run line for the district option, (--districts 14,20,30,38 ) notice 
+that there are NO spaces after the commas. If you place a space after the 
+comma (e.g. 14,20, 30,38), it will fail to generate any reports for 
+districts 30 and 38.</p>
+<p><a href ="#top">Back to TOC</a></p>
+<!-- END Tech Note -->
+<a name ="modify_reports"></a>
+<h3>Modifying the Reports</h3>
+<p>The code files for reports are located in the lib/bigdog folder and are 
+named similar to this:</p>
+ <p>banana_ds_reporter.rb</p> 
+<p>Anything with a _reporter.rb is a report file.</p>
+
+<p>Open apricot_isr_reporter.rb</p>
+<p>Things you typically have to change are the @header (line 18) to reflect 
+the current Season (the type of report is found in IsrReporter (line 15) 
+and generally doesn't ever change).</p>
+
+<p>Verify fields in the student_record (line 40) against the Pear report.</p>
+
+<p>Note the output folder (line 237). This is why you created the /out folder 
+within the project. Also note that there are no grades in the filename. 
+For Apricot (and the rest of the Eggplant courses), this isn't a problem. 
+However, for Raspberry and Melon, there are multiple grades (which means 
+multiple run lines to generate our version of the ISR). This means that 
+you will need to run the run lines one at a time, changing the outputted 
+PDF filename to reflect the grade, prior to running the next grade.</p>
+
+<p>One thing to note in the student reports (ISR and SRS). Some of the 
+schools assign the student ID field for each student as a random 10 
+digit number. This is what they're supposed to do. However, SOME of the 
+districts use the student's SSN as the student ID, adding an X at the end 
+to make it 10 digits. In these cases, we have a function (line 240) that 
+looks for that X, then changes the student ID to mask out the first digits
+of their SSN to X, in order to protect the students. The ISR is generally 
+the only report that this applies to; however, in the student's best 
+interests, we have modified all the reports to do this process. </p>
+<p><a href ="#top">Back to TOC</a></p>
+<!-- END Modify reports -->
+<a name ="report_codebase"></a>
+<h3>In-depth view of the Report codebase</h3>
+<p>The report process starts off in run.sh with the following run line:</p>
+
+<p>&quotruby -I lib bin/bigdog --mode rfrtpbt_strawberry --report srs --file IRS1XSBY0a.txt&quot</p>
+
+<p>Run line calls the run method (line 61) in running.rb via the –report 
+srs option (defined in options.rb reports section). Report call the 
+report method (line 239) in running.rb. This calls student_factory.rb or 
+apple_record_factory.rb, depending upon the file (defined in options.rb 
+line 60 or 61). Student_factory.rb builds the student record.</p>
+
+<p>In student_factory.rb, the mode supplied in the run line determines which 
+type of Strawberry student record to build (line 21). In our case, it calls 
+raspberry_fall_retake_strawberry_student.rb.</p>
+
+<p>Back in the report method of running.rb (line 408), there is a call to 
+reporter_factory.rb. This takes the mode from the run line and calls 
+raspberry_fall_retake_srs_reporter.rb (line 180 in reporter_factory.rb).</p>
+
+<p>Next, the approriate hashes get built via the initialize method in 
+raspberry_fall_retake_srs_reporter.rb (line 6). </p>
+
+<p>The report method in running.rb (line 399) starts parsing the record, 
+calling the method (via line 409) each_line_with_progress (defined in 
+line 416). It then calls record.parse, then the collect method in 
+reporter.rb (line 19), and finally the generate_report method in 
+reporter.rb (line 22).</p>
+<p><a href ="#top">Back to TOC</a></p>
+<!-- END Report Codebase -->
+<a name ="report_gotcha"></a>
+<h3>Gotchas</h3>
+<p>One of the things to watch out for is when copying/pasting code between reports (say that you fixed
+something in one report and now you need to make that same change in the others. The gotcha here is that 
+some reports use district_record, while others use state_record. This will throw an error if you forget to 
+change it to match up with the type of records that it is actually using.</p>
+<p><a href ="#top">Back to TOC</a></p>
+<!-- END Report Gotcha -->
+<a name ="strawberry2durian"></a>
+<h3>Strawberry to Durian / Starfruit to Date comparison</h3>
+<p>We also typically run an awk script ( /script/satsuma_to_date.sh and 
+/script/strawberry_to_durian.sh) to perform a comparison between ours and theirs. It 
+will require 2 folders inside of /data - /satsuma_date and strawberry_durian. When the 
+awk script finishes, it will produce a file called difference.txt. We 
+report this file to Dorito. It also creates 2 other files (other than the 
+DATEs, Starfruits, and Durians placed there). These are sorted_our_date_file.txt (or 
+durian) and sorted_their_date_file.txt (or durian).</p>
+
+<p>NOTE: You will need to place the Apple or Strawberry file inside of this directory 
+for the awk script to function properly. UNZIP the files first! You will 
+also need to remove district 98 from the DATE by deleting it from the 
+Starfruit_DATE folder.</p>
+<p><a href ="#top">Back to TOC</a></p>
+<!-- END strawberry2durian -->
+<a name ="strawberry_durian_start"></a>
+<h3>Getting Started</h3>
+
+<p>The most efficient way to do this process is to be inside of the 
+data/satsuma_date directory when running the script/sftp.sh, then get all of 
+the files (get *.*) from the path provided (you may have to call the sftp 
+script via ../.././script.sftp.sh ). This will dump ALL the files inside 
+of the satsuma_date folder. To move just the Durian files, run the following from 
+inside of the satsuma_date folder:</p>
+ 
+<p> mv *Durian*.txt ../strawberry_durian</p>
+ 
+<p>This will move the Durian files to the strawberry_durian folder for you. Switch to that 
+folder. Next, run the following to combine the Strawberry files into 1 file (do 
+this for both folders):</p>
+
+<p>cat R04WStrawberry0c.txt R08WStrawberry0c.txt R10WStrawberry0c.txt > our_strawberry_file.txt</p>
+
+<p>Then, verify in the strawberry_to_durian.sh file the length and the correct start 
+and end positions of the pas via the Durian layout, not the Strawberry layout. This 
+step isn’t required in the satsuma_date.sh script.</p>
+
+<p>Now, change directories back to the scoring_reporting folder and run the 
+script/strawberry_to_durian.sh our_strawberry_file.txt and 
+script/satsuma_to_date.sh our_apple_file.txt (for the satsuma_date process, you may be 
+able to use the concatenated file they provided (FRUIT_14SPR_Starfruit_WRIT.txt))</p>
+
+<p>This script requires an argument for the Strawberry or Starfruit file that it will run 
+against. In our case, it’s our_strawberry_file.txt.</p>
+<p><a href ="#top">Back to TOC</a></p>
+<!-- END strawberry2durian Start -->
+<a name ="issues_cause"></a>
+<h3>Finding the cause of Issues: </h3>
+<p>(e.g. they excluded school type 17 from their Durian files)</p>
+<p>To find the count of the schools that are of type 17 (at position 89, per 
+the Durian Layout): </p>
+
+<p>awk ‘substr($0, 89, 2)==&quot17&quot {print}’ data/strawberry_durian/our_strawberry_file.txt 
+> temp</p>
+
+<p>then </p>
+
+<p>&quotwc -l temp&quot</p>
+
+<p>to get the line count.</p>
+
+<p>Check in your code. </p>
+<p><a href ="#top">Back to TOC</a></p>
+<!-- END Issues Cause -->
+<a name ="feedback"></a>
+<h2>Sending Feedback</h2> 
+<p>This is the most important part of the job. This is how we can prove that 
+we did the work, and thus, get paid for it.</p>
+
+<p>The Email Subject header usually contains the Season, Course and Version 
+of the files that we checked.</p>
+<p>(e.g. Spring 2014 RM Late Reporting Wave 2 Strawberrys Version b)</p>
+
+<p>The body of the email is best described by examining one of the previous 
+ones.</p>
+<p>Ex.</p>
+<pre>
+R04XStrawberry2b.txt, R06XStrawberry2b.txt, R07XStrawberry2b.txt, R09XStrawberry2b.txt, & R10XStrawberry2b.txt
+
+No issues are found.
+No blanks and duplicates are found.
+
+Change to Strawberry
+
+The differences between Change and Strawberry files are posted on the Cheerio sftp site at 
+cheerio_to_dorito/spring_2014_live/change_to_strawberry/rm_retake/late_reporting
+/wave_2/version_b
+
+Thanks,
+
+</pre>
+<p>This is one that there were very few issues found throughout the entire 
+process. In this case, we put the filenames across the top. 
+You always report any Issues with the checks process and then any 
+duplicates that are found. Everything is in the present tense. </p>
+
+<p>Then, because this was an Strawberry file, we had access to the Change file as well, 
+so we ran the python process “change_to_strawberry” (found in /pylib).</p> 
+
+<p>The output of that process (if any) is dumped into the /ChangeStrawberryCompare 
+folder within the scoring_reporting folder of the project. We take that 
+output and copy it into the appropriate spot on our SFTP server (which 
+differs from Pear's SFTP Server.) The server name is currently called 
+SnapDragon.</p>
+
+<p><a href ="#top">Back to TOC</a></p>
+<!-- END Feedback -->
+<a name ="some_issues"></a>
+<h3>Example Seek/Change Feedback that has some issues but not a lot</h3>
+<p>Fall 2014 Retake Live Seek Change Version a
+
+<p>Sent 10/21/2014</p>
+<pre>
+RTKseekFiles.txt
+
+No issues are found.
+No blanks and duplicates are found.
+
+
+IRS1XCNG0a.txt
+
+No issues are found.
+No blanks and duplicates are found.
+
+
+Frequency Response Check
+
+Raspberry
+No issues are found.
+
+Melon
+Response Item 23 is missing the value “4” 
+Response Item 48 is missing the value “1” 
+Response Item 58 is missing the value “4” 
+
+Seek to Change
+
+There is one record in Change, but not in Seek.
+PAS
+8675309
+
+Raspberry
+
+1 record went from 99 to 17.
+
+
+Melon
+
+0 record went from 99 to 17.
+
+
+The differences between Seek and Change files are posted on the Cheerio sftp 
+site at 
+cheerio_to_dorito/fall_2014_retake_live/seek_to_change/rm_retake/version_a
+
+
+Thanks,
+
+</pre>
+<p><a href ="#top">Back to TOC</a></p>
+<!-- END Some Issues -->
+<a name ="feedback_issues"></a>
+<h3>Example Strawberry Feedback that has issues</h3>
+<p>Fall Retake 2014 Live RM Strawberry Ver a</p>
+
+  <p>Sent: 10/23/2014</p>
+<pre>
+IRS1XSBY0a.txt
+
+Raspberry
+
+There are 189 records with a different value for field APS than what we 
+calculated. The “Scrunch logic” is applied for matching records between 
+Strawberry and PreID files. If no “Scrunch logic” is applied there are 61 
+mismatches. Do we need to scrunch the fields (last name and first name) 
+as the specification document says or has that changed?
+Example PASs
+C23659988
+C23644708
+C23667536
+C23624306
+
+There are 2564 records with incorrect values for the field Theta Score. 
+In every case, there are four zeros after the decimal point. According to 
+the contract, that is not allowed but the layout does not specify this. 
+Which one is correct - the contract or the layout?
+Example PASs
+846800394
+846700407
+C23503087
+C23503327
+
+There is a record with PAS 847100051 with invalid value for the Student_Id 
+field.
+
+There are three records (PASs C23628631, C23629095, C23629075) where the 
+“First Name” and a record (PAS C23669958)where the “Last Name” 
+start with something unusual. According to the layout it’s not an 
+invalid value but it does not seem correct.
+
+There are 2 duplicate PreIDs.
+PreID
+101168649
+
+
+Melon
+
+There are many records that have different value for changeed gridded items 
+1, 3, 4, 5, etc. than what we calculated.
+In all of the cases we calculated the value to be blank.
+Example PASs
+C23673825
+C22928965
+C23635667
+C23350133
+
+There are no blanks and duplicates found.
+
+
+Change to Strawberry
+
+No issues are found.
+
+
+Thanks,
+</pre>
+<p><a href ="#top">Back to TOC</a></p>
+<!-- END Feedback Issues -->
+<a name ="no_issues"></a>
+<h3>Vs. One that does not have any issues</h3>
+
+<p>Spring 2014 Eggplant Late Reporting Wave 2 Strawberry b Files</p>
+
+<p>Sent: 08/15/2014</p>
+<pre>
+RS3HSBY2b.txt
+
+No issues are found.
+No blanks and duplicates are found.
+
+
+Change to Strawberry
+Without the Wave 2 Ver B Change file, a good compare of the Change to Strawberry 
+cannot be done at this time.
+
+Thanks,
+
+</pre>
+<p><a href ="#top">Back to TOC</a></p>
+<!-- END No Issues -->
+<a name ="apple_issues"></a>
+<h3>Example Apple feedback that has issues</h3>
+<p>Fall Retake 2014 Live RM Starfruit Ver a</p>
+<p>Sent: 10/23/2014</p>
+<pre>
+IRS1XAPL0a.txt
+
+Raspberry
+
+There are four records with a different value than what we calculated for 
+Fewer than 10 Suppression flag. In all cases, we calculated it to be 
+“Y” and not blank. According to the layout , blank is not a valid 
+value for Modes 1, 2, and 3.
+District = 13, School = 7835, Grade = AD
+District = 48, School = 0202, Grade = 10
+District = 50, School = 3083, Grade = 12
+District = 50, School = 3396, Grade = AD
+
+There are four records with a different value than what we calculated for 
+Number of Students. In all cases, we calculated it to be all zeros and 
+not blank. According to the layout , blank is not a valid value for 
+Modes 1, 2, and 3.
+District = 13, School = 7835, Grade = AD
+District = 48, School = 0202, Grade = 10
+District = 50, School = 3083, Grade = 12
+District = 50, School = 3396, Grade = AD
+
+There are four records with a different value than what we calculated for 
+Percentage Passing Suppression flag. In all cases, we calculated it to be 
+“N”  and not blank. According to the layout , blank is not a valid 
+value for Modes 1, 2, and 3.
+District = 13, School = 7835, Grade = AD
+District = 48, School = 0202, Grade = 10
+District = 50, School = 3083, Grade = 12
+District = 50, School = 3396, Grade = AD
+
+There are four records with a different value than what we calculated for 
+Same Achievement Level Suppression flag. In all cases, we calculated it to 
+be “N" and not blank. According to the layout , blank is not a valid 
+value for Modes 1, 2, and 3.
+District = 13, School = 7835, Grade = AD
+District = 48, School = 0202, Grade = 10
+District = 50, School = 3083, Grade = 12
+District = 50, School = 3396, Grade = AD
+
+
+Melon
+
+There are 2434 records with a different value than what we calculated for 
+Fewer than 10 Suppression flag. In all cases, we calculated it to be 
+“Y” and not blank. According to the layout , blank is not a valid 
+value for Modes 1, 2, and 3.
+Example Records
+District = 01, School = 0000, Grade = 10
+District = 01, School = 0000, Grade = 13
+District = 01, School = 0151, Grade = 10
+District = 01, School = 0151, Grade = 11
+
+There are 2434 records with a different value than what we calculated for 
+Number of Students. In all cases, we calculated it to be all zeros and not 
+blank. According to the layout , blank is not a valid value for Modes 
+1, 2, and 3.
+Example Records
+District = 01, School = 0000, Grade = 10
+District = 01, School = 0000, Grade = 13
+District = 01, School = 0151, Grade = 10
+District = 01, School = 0151, Grade = 11
+
+There are 2434 records with a different value than what we calculated for 
+Percentage Passing Suppression flag. In all cases, we calculated it to be 
+“N”  and not blank. According to the layout , blank is not a valid 
+value for Modes 1, 2, and 3.
+Example Records
+District = 01, School = 0000, Grade = 10
+District = 01, School = 0000, Grade = 13
+District = 01, School = 0151, Grade = 10
+District = 01, School = 0151, Grade = 11
+
+There are 2434 records with a different value than what we calculated for 
+Same Achievement Level Suppression flag. In all cases, we calculated it to 
+be “N" and not blank. According to the layout , blank is not a valid 
+value for Modes 1, 2, and 3.
+Example Records
+District = 01, School = 0000, Grade = 10
+District = 01, School = 0000, Grade = 13
+District = 01, School = 0151, Grade = 10
+District = 01, School = 0151, Grade = 11
+
+
+
+Thanks, 
+</pre>
+<p>Vs. One that doesn't have any issues.</p>
+
+<p>Sent: 10/23/2014</p>
+<pre>
+IRS1XAPL0a.txt
+
+There are no issues found.
+
+
+Thanks, 
+
+</pre>
+<p><a href ="#top">Back to TOC</a></p>
+<!-- END Apple Issues -->
+<a name ="common_issue"></a>
+<h3>Vs. This one which has a common problem</h3>
+<p>Fall Retake 2014 Live RM Starfruit Ver a</p>
+<p>Sent: 10/23/2014</p>
+<pre>
+IRS1XAPL0a.txt
+
+
+There are many records for both Raspberry and Melon that have blank for the 
+fields “Number of Students”, “Fewer than 10 Suppression flag”, 
+“Percentage Passing Suppression flag”, and “Same Achievement 
+Suppression flag”. According to the layout , blank is not a valid value 
+for Modes 1, 2, and 3 for these fields. It looks like these fields have 
+blank for a record when no scorables were returned. This is not specified 
+in the layout like in the “Spring 2014 RM Apple layout”. So, is it 
+correct to have blanks for these fields when no scorables are returned? 
+Other than that, no issues are found.
+
+
+
+Thanks, 
+</pre>
+<p><a href ="#top">Back to TOC</a></p>
+<!-- END Common Issues -->
+<a name ="cala_sftp"></a>
+<h3>Connecting to SnapDragon</h3>
+<p>Open a Finder window and click on Go > Connect to Server. The server 
+address that you want to use is &quotcifs://snapdragon/FTPData&quot. Look for 
+the cheerio_to_dorito folder. </p>
+
+<p><a href ="#top">Back to TOC</a></p>
+<!-- END Cheerio SFTP -->
+<a name ="email_sent"></a>
+<h3>Once you click on &quotSend&quot</h3>
+<p>Copy the feedback emails that you sent into a text file onto your Desktop. 
+The text file should have Sent: and the date the email was sent on it. 
+(e.g. Sent: 10/02/2014), followed by an empty line and the body of the 
+email that you sent to the Doritoassessment list in your email client. The 
+Filename of the text file should be whatever the Subject line was. (e.g. 
+Summer 2014 Eggplant Wave 1 Late Reporting Educator Reports.txt)</p>
+
+<p>Open a Finder window and click on Go > Connect to Server. The server 
+address that you want to use is &quotcifs://violet/production&quot. Look for 
+the fcat_deliverables folder.</p>
+
+<p>Ask your team lead for which invoice_XXXXXX folder to put it in, and 
+paste the text file into the folder.</p>
+<p><a href ="#top">Back to TOC</a></p>
+<!-- END Email Sent -->
+<a name ="misc"></a>
+<strong>Misc. Stuff</strong>
+<h3>AWK scripts</h3>
+
+<p>Isolating just the kids with a Y for Eligible_APE </p>
+<p>awk 'substr($0,242,1) == &quotY&quot {print}' data/fl_fsa_fcatfa14_int_
+extract_preid.dat > data/APE_File.txt</p>
+<p>NOTE: AWK is 1 based, not 0 based like Ruby is...</p>
+
+<h3>Removing extra whitespace at the end of lines of code </h3>
+<p> Be inside of your scoring_reporting folder in the terminal window.</p>
+<code> grep -n -e "\s$" layouts/*.yml  </code>
+
+<h3>Code map</h3><p><em>VERY rough draft of this</em></p>
+<p>running.rb -  Kickstarts the whole program</p>
+<p>&emsp;options.rb - Defines modes used in command line arguments</p>
+<p>&emsp;config.rb - Loads config files from /config</p>
+<p>&emsp;student_factory.rb - Creates a student object, based upon mode presented</p>
+<p>&emsp;checker_factory.rb - Based upon modes presented, starts checkers (e.g. eggplant_checker)</p>
+<p>&emsp;field_writer.rb - >Writes the program output to the Terminal window and writes the error files (e.g. mi.ftl)</p>
+<p>&emsp;appleregator_factory.rb - </p>
+<p>&emsp;apple_record_factory.rb - </p>
+<p>&emsp;reporter_factory.rb - Based upon mode presented, starts creating reports</p>
+
+<p><a href ="#top">Back to TOC</a></p>
+<!-- END Misc Stuff -->
+<a name ="what_next"></a>
+<h2>What next?</h2>
+<p>Rinse and repeat as you move through the FRUIT process (Mock Seek Change, 
+Mock Strawberry, Mock Apple, Mock Reports, Live SeekChange, Live Strawberry, Live Apple, 
+Live Reports, Late Reporting (Strawberry) Closeout (Strawberry)).</p>
+
+<p>Best of luck... </p>
+<!-- END What Next -->
+</body>
+</html>

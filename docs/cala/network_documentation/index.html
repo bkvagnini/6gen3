@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>CALA Network Documentation</title>
+</head>
+<body>
+  <h1>CALA Network Documentation</h1>
+  <nav>
+  <ul>
+    <li><a href="#Overview">Overview </a></li>
+    <li><a href="#Daily">Daily done</a> </li>
+    <li><a href="#server_roles">Server Roles</a> </li>
+    <li><a href="#dc">Domain Controllers </a></li>
+    <li><a href="#email">EMail/File Server </a></li>
+    <li><a href="#code">Code Server</a> </li>
+    <li><a href="#other">Other Servers</a></li>
+    <li><a href="#printers">Printers </a></li>
+    <li><a href="#firewall">Physical Network / Firewall</a></li>
+    <li><a href="#clients">Clients </a></li>
+    <li><a href="#backups">Backups</a></li>
+    <li><a href="#quirks">Known Quirks </a></li>
+
+  </ul>
+  <a name ="Overview"></a>
+  <h2>System Administrator Job Overview</h2>
+    <p>
+      <ul>
+      <li>Maintains Cisco ASA 5510 firewall and ACLs</li> 
+      <li>Manages Cisco VPN access</li>
+      <li>Manages Exchange 2010 server</li>
+      <li>Configures iPhones and Android phones for CALA E-mail (as needed)</li>
+      <li>Assists CALA guests with FSUSecure wireless access (as needed)</li>  
+      <li>Monitors and maintains network printers</li>
+      <li>Connect client machines to network printers</li>
+      <li>Manages iMac client computers</li>
+      <li>Maintains / Updates Windows 7 client computers</li>
+      <li>Ensures that Google Hangout and Skype sessions with remote workers are functional (as needed)</li>
+      <li>Maintains CALA Active Directory</li>
+      <li>Maintains / Updates Windows 2008 and 2012 servers</li>
+      <li>Manages CALA DHCP and DNS services </li>
+      <li>Maintains CALA VShell SFTP sites</li>
+      <li>Ensures that daily Full backups of file server / Exchange server take place</li>
+      <li>Interacts with FSU ITS staff for network / security issues</li>
+      </ul>
+    </p>
+    <p><a href ="#top">Back to TOC</a></p>
+    <a name ="Daily"></a>
+  <h2>Daily done </h2>
+  <p>(updated 021715)<br>
+
+    -Run ping_srvrs.bat on the desktop (Linux) (on iMac, it's USER\pingtest.sh)- confirm that there are responses from all servers<br>
+    -Open up www.cala.fsu.edu (this confirms that Github Pages is working) <br>
+    -Open up learn.cala.fsu.edu (this confirms that Github Pages is working)<br>
+    -Open up ial.fsu.edu (this confirms that Github Pages is working for Dr. Larry Abele website)<br>
+    -Open up webmail (https://mail.cala.fsu.edu/owa) and sign in (verifies that www service is running 
+    and that Information Store service is available)<br>
+    -Open Outlook & Thunderbird/Mail app- confirm connectivity to Exchange (MAPI and IMap4)<br>
+    -Send test message (I sent my Daily done log) via Gmail(or other external mail acct) to Cala acct (confirms incoming messages)<br>
+    -Swap out backup drive in Violet- confirm that it can be seen by OS- place in fireproof safe located in Interior Secure rm in 237M <br>
+    -Log which backup drive did what type of backup in CALA Backups spreadsheet</p>
+<p>
+    MONDAY:<br>
+    -Sign into all printers web interfaces and check toner levels (use shortcuts in Web Admin shortcuts folder)<br>
+    - restart www service on Violet<br>
+<p>
+    TUESDAY:<br>
+    - do updates on all loaner laptops weekly <br>
+  </p>
+<p>
+    WEDNESDAY:<br>
+    -Update laptop in Morgan rm 237 for Acrobat, System Center Endpoint Protection and Windows Updates (no Java installed, so 
+    there are no updates for that)<br>
+    -Update NetworkAdmin machine in rm 237M for Acrobat, SCEP, Windows and Java<br>
+      </p>
+<p>
+    FRIDAY:<br>
+    -Copy catkin_git.tar to violet\d$\from_catkin (generated Thurs 11pm)<br>
+    -Do a full backup of Dragonlily to Violet\Dragonlily (located on D drive)<br>
+    -Look through event logs for the Windows servers<br>
+      </p>
+<p>
+    MONTHLY:<br>
+    -Clear out or archive the SMTPReceive and SMTPSend logs from Violet to somewhere else<br>
+    -Do a backup of Violet using a drive from NWRDC- place back in locker #18 in NWRDC the next day<br> 
+      </p>
+  </p>
+  
+  <p><a href ="#top">Back to TOC</a></p>
+  <a name ="server_roles"></a>
+  <h2>Server Roles</h2>
+  <ul>
+    <li> 3) Dragonlily (.139) - AD, DNS, SQL Server 2008, Archives (backed up to Violet)(Windows 2008)</li>
+    <li>4) Snapdragon (.133 /.145) - AD, DNS, DHCP, SFTP Server (using VShell)(Windows 2012)</li>
+    <li>Foxglove-VM (.135) - AD, DNS (Virtual Machine)(Windows 2008)</li>
+    <li>1) Violet (.240/ .131) - Exchange 2010, File Server, McAfee AntiSpam, Virtualbox VM Host (backed up to external hard drive H:)(Windows 2008 R2)</li>
+    <li>2) Catkin (.136) - Git, Samba (backed up to own hard drive, then copied to Violet)(Ubuntu 13.10)</li>
+    <li>Cites_dbs (.227) - Print Server (retiring soon) (Windows 2003)</li>
+    <li>Test (.173) - nginx (Virtual machine hosted on Violet)(Ubuntu 12.04)(firewall rule disabled)</li>
+    <li>Intranet (.191) - apache2 (Virtual machine hosted on Violet)(Ubuntu 12.04)(not used)</li>
+    <li>Trillium (.138) - syslog server (Ubuntu 13.10)(not used)</li>
+    <li>Tulip (.147) - Virtual Machine Host(Ubuntu 13.10)(not used)</li>
+  </ul>
+  <p><a href ="#top">Back to TOC</a></p>
+  <a name ="dc"></a>
+  <h2>Domain Controllers </h2>
+    <p>CALA has three domain controllers available, two physical and one virtual. They are: Dragonlily (.139), SnapDragon (.133), and Foxglove-vm (.135). 
+      All three are also CALA's internal DNS servers. Dragonlily is the most important domain controller , as it holds all 5 of the Active Directory roles.
+      <br>If one is offline (restarting for updates), it's not the end of the world; however, they will all need to be back up at some point. Do NOT restart
+      all three at the same time: Exchange stops working, as does the Internet for everyone in the Center. 
+      
+    </p>
+
+    <p><a href ="#top">Back to TOC</a></p>
+    <a name ="email"></a>
+  <h2>EMail/File Server </h2>
+  <p>This Server name is Violet (.240 / .131). It houses Microsoft Exchange 2010 SP3, as well as acting as our file server.
+    It also houses the three virtual machines (via Virtual box).</p>
+    <p>Violet has several physical disks, which are organized as follows:</p>
+    <ul>
+      <li>C: Drive - OS, McAfee and Exchange Program Files</li>
+      <li>D: Drive - Exchange Databases and other network backups (this is not seen by Center staff)</li>
+      <li>E: Drive - File shares (this is referred to as the Production Server)</li>
+      <li>F: Drive - Exchange Transaction Logs (these get removed by a FULL backup after being committed to the Exchange database & being backed up)</li>
+      <li>H: Drive - My Passport (This is the removable drive for backups)</li>
+    </ul>
+    <h3> Other Exchange Settings</h3>
+    <ul>
+      <p> These are found under Organization Configuration > Hub Transport > Global Settings > Transport Settings</p>
+      <li>Deleted Items retained for 21 days</li>
+      <li>Deleted Mailboxes retained for 45 days</li>
+      <li>75 Connections Max</li>
+      <li>10 Minute Connection timeout</li>
+      <li>Message Size 20480 KB Max (Send and Receive)</li>
+      <li>Number of messages per connection is 20</li>
+      <li>Number of recipients per message is 400</li>
+      <p> These are found under Server Configuration > Hub Transport > Violet > R/C, then Properties > Limits</p>
+      <li>Delivery Retry Interval is 10 min, 10 min, then 15 min</li>
+      <li>12 hour delay notification with 2 day expiration</li>
+  </ul>
+    <h3>Mail flow is as follows:</h3>
+    <img src="images/mailflow.jpg" alt = "FLow of email in CALA diagram" />
+    <p>Some guy wants to send us an email from whatever.domain.com. His mail server (mail.whatever.domain.com) will contact his ISP's DNS server to find out 1) who is in charge of cala.fsu.edu and 2 ) who is in charge of mail at 
+      cala.fsu.edu. The second query is asking for the MX record. These DNS queries will end up talking to FSU's DNS server, as they hold our external DNS records (the MX record is mail.cala.fsu.edu and it's IP is .240).</p>
+    <p>Then his mail server will sent a Simple Mail Transfer Protocol (SMTP) message to our mail server, Violet. It will go through the FSU firewall, then the FSU switch,
+        then hit our firewall.</p>
+    <p> At this point, our firewall will check it's rules to see if that type of traffic is allowed (it is), then it will forward it from it's external interface (146.201.223.58) to it's 
+          internal interface (146.201.209.129). There, it will go to one of our switches, which then forwards it to Violet's SMTP port (25).</p>
+    <p>At this point, it wil be stopped by the McAfee Anti-spam/Anti-Malware services that we have installed, where it will be checked against
+          another set of rules to see if the mail message is legitimate or not. Assuming that it is, it passes it onto the Exchange Message Transfer Agent.</p>
+    <p>The MTA will verify that the recipient actually exists by checking Active Directory (hosted on Dragonlily, Snapdragon or Foxglove-vm). If the recipient exists, then it will see if that user 
+      account's e-mail is in it's own database (it is). At this point, it will write the entry to the transaction log (Violet\F drive), then 
+          it will insert the mail message in the Information Store database (housed on Violet\D drive) and notify the user that they have mail (if they are connected via Outlook). </p> 
+          
+          <h3>Retrieving an e-mail message</h3>
+          <p>The user on the inside has a variety of ways to check e-mail. They could use Outlook, which is a MAPI client. They could use Outlook Web Access, which uses the WWW service on Violet.
+           They could use the Mail app on iMac or the Exchange client on their iPhone, both of which also use the WWW service to connect. They could also use either IMAP v4 or POP3 on their phones
+           which uses either the IMAP service or the POP service on Violet.</p>
+           <p>In any case, the client will verify their Active Directory Credentials (after sending an internal DNS query first to determine which Domain Controllers are available). Once their Active Directory
+           credentials are verified, it then contacts the respective service to retrieve a message.</p>
+           <h3>Sending a reply</h3>
+           <p>The users email client (phone, Outlook, OWA etc) will send a DNS query to CALA's internal DNS servers to see who is in charge of the domain at whatever.domain.com. Then it will contact
+             whatever.domain.com to determine who is in charge of e-mail at whatever.domain.com. It will get the reply that mail.whatever.domain.com is in charge of e-mail. This is their MX record.</p>
+             <p>Once that IP address is known, Violet will send an SMTP message to the mail server at mail.whatever.domain.com. It will follow the same path as incoming e-mail, but in reverse.</p>
+             <h3>Internal e-mail</h3>
+             <p>The message flow for internal e-mail is completely different.</p>
+             <p>When you send a message to an internal user, Exchange will check Active Directory to verify that the recipient belongs to us. Then it will see if that user account's e-mail is in it's own database (it is).
+             At this point, it will write the entry to the transaction log (Violet\F drive) (same process for external mail), and then write the entry into the database, then notify the user. </p>
+               <h3>McAfee Anti-Spam / Anti-Malware Service</h3>
+               <p>The url for monitoring and configuring this service is <a href="https://violet/MSME">https://violet/MSME</a></p>
+               <p>It will throw an error about the connection not being secure. This is due to the fact that our SSL certificate is a wildcard 
+                 certificate (e.g. *.cala.fsu.edu). The https connection WANTS to see a certificate for violet.cala.fsu.edu. Hence, the error.</p>
+               
+               
+    <p><a href ="#top">Back to TOC</a></p>
+    <a name ="code"></a>
+  <h2>Code Server </h2>
+    <p>Catkin (.136) is running Ubuntu 13.10 and has a user acct called git. All code repositories are stored inside of git/home. It's running Samba as well, to 
+      allow for clients to connect to it to store necessary files that are not a part of a project. It was originally used to store the FCAT Student data files.
+      There are two user accts to be aware of: the root user and the git user.</p>
+    <p><a href ="#top">Back to TOC</a></p>
+    <a name ="other"></a>
+  <h2>Other Servers</h2>
+  <h3>Github Pages hosting (for ial.fsu.edu and for cala.fsu.edu)</h3>
+  <ol>
+    <li>Create your Github account (need a unique email address per acct)</li>
+    <li>Create the website on your local development machine</li>
+    <li>Create your local git repo</li>
+    <li>Sign into your new Github.com account and create the remote repo</li>
+      <p><strong>KEY STEP: </strong>It MUST be in the format username.github.io
+      <br>The username portion IS case sensitive and MUST match the case of your github username</p>
+    <li>On your local git repo, create a remote repo</li>
+      <p><em>git remote add github https://github.com/username/username.github.io.git</em></p>
+      <p><strong>username MUST match case of the Github username created in step 1</strong></p>
+    <li>Push your site to the remote repo</li>
+      <p><em>git push github master</em></p>
+    <li>Test your content by browsing to http://username.github.io</li>
+    <li><strong>KEY STEP: </strong>For DNS, add (or modify) the @ A record (for the domain itself) to point to the IP address of username.github.io (discovered by pinging that address)
+      <br> Add (or modify) the www CNAME record to point to username.github.io</li>
+    <li><strong>KEY STEP: </strong>Create the CNAME file in your project folder (NOTE: it is called CNAME, not CNAME.txt)</li>
+    <p>It should contain the following: www.whateveryourdomainnameis.com</p>
+    <li><strong>KEY STEP: </strong>Push the CNAME file to the project and test for both whateveryourdomainnameis.com, and www.whateveryourdomainnameis.com</li>
+  </ol> 
+  <br>  
+  <h3>VShell SFTP Server</h3>
+      <p>The CALA SFTP Server is hosted on Snapdragon (.133 / .145). It also holds several other IP address's, which are mapped to particular SFTP sites.</p>
+      <ul>
+          <li>doeassessment (.130)</li>
+          <li>doeaccountability (.132)</li>
+          <li>fwc-cala (.144)</li>
+          <li>fwcftp (.145)</li>
+          <li>ftce-ftp (.228)</li>
+      </ul>
+      <p>All FTP sites are up and running; however, per Fara, the firewall rules to allow the world to access them are disabled.</p>
+    <h3>Test Server</h3>
+      <p>Our test server(.173) (for web-based projects) is hosted as a virtual machine on Violet (.240). It is running Ubuntu Server 12.04, with nginx
+      as the web server. The path to the web server root files is /usr/share/nginx. There is a firewall rule to enable this server to be accessed from the outside world. The rule is currently disabled: this 
+      should be the normal state unless we are actively testing something.</p>
+    <h3>Intranet Server</h3>
+        <p>Our intranet server(.191) (for internal CALA staff) is hosted as a virtual machine on Violet (.240). It is running Ubuntu Server 12.04, with apache2
+      as the web server. The path to the web server root files is /var/www. It is currently not being used at this time.</p>
+        </p>
+        <h3>Print Server</h3>
+        <p>We currently have a print server called cites_dbs (.227). It is running Windows 2003 and is located in the server rack, above Violet. It was previously 
+          located in the Morgan building, room 237, Interior secure room.
+          <br>The plan is to retire this server immediately. UPDATE: Not happening within the timeframe allowed. (030915) </p>
+          <h3>DHCP Server</h3>
+            <p>The CALA DHCP Server is hosted on Snapdragon (.133 / .145). The range of addresses that it passes out go from .200 to .225. In addition to IP, it also passes out 
+              the Default Gateway (.129), and DNS Servers (.133/ .139 / .135).</p>
+<p><a href ="#top">Back to TOC</a></p>
+<a name ="printers"></a>
+  <h2>Printers </h2>
+    <p>Currently, all printers are set up on the Print Server (Cites_dbs (.227)). The best course of action is to retire that server, as it is the only 
+      remaining Windows 2003 server, and our number of clients is so small, that a print server seems unnecessary. It adds an additional troubleshooting step.</p> 
+      
+      <ul>
+        <li>Minolta Bizhub C360 (.148)- Sliger Copy Center</li>
+        <li>HP LaserJet 4050 (.150) - Sliger (Toby's Office) (S/N CNDY400534?)</li>
+        <li>HP LaserJet 4200 (.151) - Broken?</li>
+        <li>HP LaserJet 4050 (.154) - Sliger Copy Center (S/N USCC002916)</li>
+        <li>HP LaserJet 4300DTN (.156) - Morgan (Kathy's Office)</li>
+        <li>HP Color LaserJet 3800N (.159) - Morgan (Fara's Office)</li>
+        <li>Dell 1815dn MFP (.160) - Morgan (Kathy's Office)</li>
+        <li>HP Color LaserJet 3800N (.162) - Sliger Mail Room</li>
+        <li>HP LaserJet 9050 (.163) - Sliger Mail Room</li>
+      </ul>
+      <p> Toner Parts Used</p>
+      <ul>
+        <li>Minolta Bizhub C360 (TN319M, TN319Y, TN319K, TN319C) </li>
+        <li>HP LaserJet 4050 (C4127A (27A))</li>
+        <li>HP LaserJet 4300DN (39A)</li>
+        <li>HP Color LaserJet 3800 (Q6470A (black), Q7581A(cyan), Q7282a(yellow), Q7583a(magenta))</li>
+        <li>Dell 1815 MFP (RF223)</li>
+        <li>HP LaserJet 9050 (C8543x)</li>
+        <li>Epson Photo 1280 (Colin's Office)(T007, T009) (no longer in use?)</li>
+      </ul>
+    <p><a href ="#top">Back to TOC</a></p>
+    <a name ="firewall"></a>
+  <h2>Physical Network / Firewall</h2>
+    <p>Our firewall (.129) is a Cisco ASA 5510. It is located in the Sliger building , room 209. The RED key opens the door. 
+      <br>In the event of an emergency, Blair from CIMES also has a key to that door. Mitch Gans (ITS- Datacenter downstairs) should also have a key or access.</p> 
+      <p>Our switches are split up, but the main one that connects to our firewall is located in the same wiring cloest. Attached is an image of a mapping of the ports in each 
+        room (in the Sliger building), that corresponds to the patch bay located in Room 209.</p>
+         <img src="images/Sliger_building_room_map.jpg" alt = "Patchbay" height="50%" width="50%" />
+      <h3>Our Switches</h3>
+      <ul>
+        <li>Cisco 24 port rm 237M (Morgan Wire Closet)(.9)- (IP address not configured?)</li>
+        <li>Cisco 24 port rm 101S (Sliger DataCenter)(.215)- (IP address not configured?)</li>
+        <li>Cisco 12 port rm 209S (Sliger Wire Closet)(.248)- (IP address not configured?)</li>
+        <li>Cisco 48 port rm 209S (Sliger Wire Closet)(.249)- (IP address not configured?)</li>
+      </ul>
+         <img src="images/patch_bay.jpg" alt = "Patchbay" height="50%" width="50%" />
+      <p> Switch Port 1- goes to rm 103 via Patch port 23). This should be our connection to FSU. <br><br></p>
+      <img src="images/CALA_switch.jpg" alt = "Cala Switch" height="50%" width="50%" />
+            <p> This is an image of CALA's Switch (located above the red Watchguard firewall). The orange cables on the right are the fiber cables that connect the switch in the Morgan building to our switch in the Sliger building rm 209.
+              <br>The switch ports start with 1 on the upper left, then 2 is the bottom port on the left side (underneath Port 1). Port 3 is the port to the right of Port 1 in the upper left corner. <br><br></p>
+      <img src="images/router.jpg" alt = "Back of Cisco ASA 5510 Router" height="50%" width="50%" />
+      <p>Switch Port 2 - goes to the firewall port #1 via the grey cable. (FSU). This and switch port 1 may be on a different VLan than the rest of the switch ports.</p>
+      <p>Switch Port 7 - goes to the firewall port #0 via the yellow cable. (calainside)<br><br></p>
+    <h3>Path to the world</h3>
+    <p> The path to the Internet (as of 3/20/13 per Justin Nelson at Core) is as follows: Your machine -> wall jack in your room -> Patch bay -> Switch port -> 
+        <br>CALA Firewall (cala side 146.201.209.129) -> CALA Firewall (ITS side 146.201.223.58- routing is internal) -> ITS Switch (128.186.248.10?) -> ITS Firewall (128.186.249.49?) -> World
+    </p>
+    <h3> VPN Access</h3>
+    <p>created 012815 bkv
+
+      <h4>On Firewall</h4>
+
+      <p>Can monitor the number of concurrent connections via Monitoring > VPN >Sessions<br>
+      The top window will display the total number of all the sessions, broken down by type.<br>
+      (have licenses for 2 AnyConnect Sessions and 250 other VPN sessions)<br>
+      Click on Filter By: and select either All remote Access or IPSec (IKE) to see the logged on users.<br>
+</p>
+<p>
+      for iPad</p>
+      <p><em>(Ver. 7.1.1 , 8.1.2 & 8.1.3)</em></p>
+<ol>
+
+    <li>Open General Settings and Choose VPN</li>
+    <li>Click on Add VPN Conncection</li>
+    <li>Choose IPSec</li>
+    <li>Description: CALA IPSec (field is required; this specific name is not)</li>
+    <li>Server: 146.201.223.58</li>
+    <li>Account: bvagnini (or your VPN account on the firewall)</li>
+    <li>Password: Can enter it or leave it set to ask every time</li>
+    <li>Use Certificate: OFF</li>
+    <li>Group Name: CALAVPN (not sure if this is case sensitive or not)</li>
+    <li>Secret:  calaIP902 (this IS case sensitive)</li>
+    <li>Proxy:  OFF</li>
+<</ol>
+
+      <p>for Android</p>
+      <p><em>(Ver. 4.4.4 & 5.0.2)</em></p>
+<ol>
+      <li>Open Settings</li>
+      <li>Tap More… (Underneath Data Usage)</li>
+      <li>Choose a PIN (if not already done)</li>
+      <li>Tap VPN</li>
+      <li>Click on the + at the top</li>
+      <li>IPSec Settings:</li>
+      <li>Name: Cala IPSec</li>
+      <li>Type: L2TP/IPSec PSK</li>
+      <li>Server Address: 146.201.223.58</li>
+      <li>L2TP secret: not used</li>
+      <li>IPSec Identifier: CALAVPN</li>
+      <li>IPSec pre-shared key: calaIP902</li>
+<br>
+      <li>Tap Cala Ipsec</li>
+      <li>Enter your Username and Password</li>
+      <li>Tap Connect</li>
+</ol>      
+      
+      
+    </p>
+    <p><a href ="#top">Back to TOC</a></p>
+    <a name ="clients"></a>
+  <h2>Clients </h2>
+    <p>Yup. We got 'em. All active clients are either running Windows 7 Pro or Windows 7 Enterprise (one Alienware machine- 64 bit) with Service Oack 1, or they are running Mac OS X 10.9 or 10.10. 
+      The only exception is that Al's iMac is running Snow Leopard (10.6), due to hardware constraints. Colin's old iMac is running OS X 10.?. 
+      Almost all Windows clients are running a 32 bit version of the OS. Exceptions can be found in the Inventory.</p>
+    <p><a href ="#top">Back to TOC</a></p>
+    <a name ="backups"></a>
+  <h2>Backups</h2>
+    <p>
+      (as of 021715 bkv)</p>
+      <p>The server backups on Violet run every day at 4pm (via a scheduled task) and generally complete prior to midnight. This is by design, as 
+        Windows Updates (that run at 3am) can force a restart, which would interfere with the backup process. </p>
+      <p>The server backup of Catkin starts at 11pm on Thursday evening (via a cron job), backing up only the git repository. This is by design, as
+          the code base is located on each persons machine and can be replicated back to a recreated Catkin server. The backup file is 
+          then copied Friday morning to Violet\D$\from_catkin, to be included in the daily backup.</p>
+      <p>The backup of our domain controllers/DNS server (Dragonlily) occurs on Friday and it is stored on Violet\D$\Dragonlily_backup (VERIFY THIS). 
+        It also backups up our SQL Server databases and configuration (although they are not being used at this time).</p>
+      <p>Snapdragon is NOT backed up, as the contents of the SFTP server are fluid (and, at this moment, not necessary). Likewise for the DHCP service 
+        database. Since we rarely have any DHCP clients. this database can be recreated, and thus, does not require a backup.</p>
+        <p>Tulip and Trillium are not currently being used at this time. </p>
+        <p>Foxglove-vm only has the domain controller and dns roles, and that functionality is replicated daily to Dragonlily and Snapdragon. </p>
+        <p>Test and Intranet are only hosting web files and that content is stored on the developers machine, as well as possibly being stored on Catkin. </p>
+<h3>Backup Procedures</h3>
+<h4>Daily</h4>
+      <ol>
+      <li>Open up rm 237 in the Morgan building (4325)</li>
+      <li>Open up the secure room inside of rm 237 (2543)</li>
+      <li>Select the appropriate external hard drive from the the fireproof safe with the heart sticker on it. 
+      <br>(should be the first ones that you encounter on the right when you open the door)
+      <br>The drives are labeled #3 through #7- drive #3 is for Monday, drive #4 is Tuesday, etc.
+      <br>(Drive #1 and #2 are in the locker over at NWRDC- more details on that later)</li>
+      <li>Log into the network admin machine (the desktop in rm 237) as the domain administrator</li>
+      <li>Open the website shortcuts folder on the desktop, then open the CALA Backups spreadsheet</li>
+      <li>Double click on the RDP shortcut on the Desktop and select Violet as the server
+      <br>(On Fridays, you will also do this to access Dragonlily as well.) Start Dragonlily backup FIRST</li>
+      <li>Sign into the server as the domain admin</li>
+      <p> These steps are on Violet</p>
+      <li>Open My Computer and verify that none of the hard drives are getting full</li>
+      <li>Minimize that window and click on Start > Microsoft Server Backup</li>
+      <li>Verify that the previous nights backups were successful and double click to verify that they were Full backups (except for the weekends, see Friday)</li>
+      <li>Safely remove the drive from the machine (via the green icon in the Task Bar) and verify that it's ejected using My Computer.</li>
+      <li>Minimize the Remote Desktop Session to the server and enter into the spreadsheet the type of backup executed in the current month’s tab</li>
+      <li>Go downstairs (after getting the current day's hard drive from the fireproof safe), and go into the datacenter (Downstairs , Sliger Building). 
+        You will need your FSU ID card to gain entry into the datacenter. Turn right and head towards J 38. Our rack is labelled with our name. 
+        The keys to the rack are on top of the rack.</li>
+        <li>Pull the previous day's hard drive and insert today's hard drive.</li> 
+        <li>Head back upstairs to room 237 Morgan building.</li>
+        <li>Unlock the Network Admin machine and maiximize the Remote Desktop Session that you had established. </li>
+        <li>Verify that the current day's hard drive is listed in My Computer. NOTE: It will not display anything like (Drive #3). 
+          DO NOT change it so that it does: this screws up the Scheduled Task.</li>
+        <li>Right Click and Format the Drive. It will say Drive H. <strong><style ="font-color:red">MAKE SURE IT SAYS DRIVE H.</style></strong> If you accidently format 
+          any of the other drives, you will be testing just how good your backups are.<p>If you don't format the drive, then the type of backup is not full, but incremental. 
+          Another full backup won't occur for 14 days. I have not found where I can change this behavior. This is not what we want.</p></li>
+    </ol>
+    
+      <h4>Friday</h4>
+            <ol><li>Start Dragonlily backup FIRST THING in the morning.</li>
+            <p> The steps for accessing it are the same as for Violet.</p>
+            <li>Once you are signed into Dragonlily, Click on Start > Windows Server Backup.</li>
+            
+      </ol>
+      <h4>Monthly</h4>
+            <ol><li>Start Dragonlily backup FIRST THING in the morning.</li>
+              <p> NOTE: Backing up with Drive #2 has to be manually executed as the name of the drive doesn't seem to match the 
+                names of the other 6 drives. This is the result of attempting to change the drive name to match the number.
+                 For some reason, this causes the scheduled task to break.
+            </ol>
+    </p>
+    <h3> Restore Procedures</h3>
+    <p> </p>
+    <p><a href ="#top">Back to TOC</a></p>
+    <a name ="quirks"></a>
+  <h2>Known Quirks </h2>
+    <h3>Email stops working</h3>
+    <p>The first thing to keep in mind is that it's possible to have internal e-mail flowing, but not external e-mail flowing. </p>
+    <h3> E-mail troubleshooting</h3>
+    <ol>
+      <li>Send an external e-mail from Gmail or Yahoo etc. to your CALA account. Did it arrive in a timely manner? If yes, then incoming mail is working.</li>
+      <li>Send an external e-mail from your CALA account to your Gmail or Yahoo account etc. Did it arrive? If yes, then outgoing mail is working.</li>
+      <li>Send an internal e-mail from your CALA account to another CALA account (I had a fictitious acct set up for this purpose: sash@cala.fsu.edu). 
+      You can check this by opening a private browser session and going to the webmail url (https://mail.cala.fsu.edu/owa). Enter sash : G1rlN3xtD00r</li>
+    </ol>
+    <p>If external mail is failing to come in, verify that you have Internet connectivity first. If you do, then verify that the McAfee service is still working. Some mail should be getting 
+      through the filter. If not, then restart the server.</p>
+    <p> If a server restart doesn't fix the issue, then turn off the McAfee services and see if e-mail is flowing through properly or not. If it starts to flow, then follow up with McAfee.</p>
+    <p>If you don't have Internet connectivity, then verify that the firewall is still up by signing into the firewall admin interface. You should be seeing traffic coming in. If not, call ITS at 644-4357 (HELP). 
+      If yes, then possibly restart the firewall. This may break off the DoS connection that may be happening.</p>
+    <p>If you have Internet connectivity via IP address, but not by name, then you may have a DNS issue. Verify that the internal DNS servers are working. This can be done either via a ping 
+    test (it should resolve the name to an IP address, but in all likelyhood, the ping test itself will fail. This is due to circumstances way beyond your control.) OR you can use dig 
+    (on *nix machines) or nslookup (on Windows machines). FSU's external DNS servers are as follows: 128.186.6.103, 128.186.8.8 or 192.12.121.44</p>
+     <h3>Virtual Machines aren't responding</h3>
+     <p>This issue is that the virtual machines (Foxglove-vm, test and intranet) don't respond to a ping test. </p>
+     <p> Most likely, the host server (Violet) had restarted due to Windows Updates (usually Tuesday or Wednesday).</p>
+     <p>Once you log into Violet via Remote Desktop, the three virtual machines will start up. This is due to them being placed in the Startup folder.</p>
+     <p>This happens from time to time, as Virtualbox is not running as a service. (Executables that are listed as Services don't require anyone to be logged into the machine.)</p>
+     <h3>Help. I can't print</h3>
+     <p>Most probable cause is that the print server (cites_dbs(.227)) restarted and it's paused in it's restart cycle waiting for someone to press F1 or another key. UPDATE: The server relocation on 030715 to the 
+     server rack should alleviate this issue occurring due to loss of power.</p>
+     <p> The next most probable cause is that the print spooler service needs to be restarted. Symptoms of this issue are that the user has submitted
+     a print job, but nothing is printing and they can't even cancel the print job. Sign into Cites_dbs via Remote Desktop and Open the Services shortcut. Scroll to the bottom and 
+     select Print Spooler service, then click on Restart in the left hand side bar. </p>
+</body>
+</html>

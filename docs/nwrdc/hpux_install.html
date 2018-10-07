@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title> HP-UX Installation</title>
+<link rel=stylesheet href="howto.css" type="text/css" media=screen>
+<!-- Yes. I know that you are supposed to properly indent all code. However, it really screws up the pre tags that I had to use 
+to show the expected output. If YOU want to mess around for a few weeks trying to get the formatting exactly right on the output, 
+then have at it, monkey boy; otherwise, cut me some slack...   -->
+</head>
+<body>
+<h1> HP-UX Installation</h1>
+<a name="toc"></a>
+<p>TOC</p>
+<ul>
+<li><a href="#vm">Virtual Machines</a></li>
+<li><a href="#disk">disk info</a></li>
+	<ul>
+	<li><a href="#df">df commands</a></li>
+	<li><a href="#ioscan">ioscan</a></li>
+	<li><a href="#scsimgr">scsimgr</a></li>
+	<li><a href="#pvdisplay">pvdisplay</a></li>
+	<li><a href="#lvdisplay">lvdisplay</a></li>
+	<li><a href="#vgdisplay">vgdisplay</a></li>
+	</ul>
+<li><a href="#ignite">Ignite_IMS info</a></li>
+<li><a href="#misc">misc. info</a></li>
+</ul>
+<p><em>created 020516 bkv updated 063016 bkv</em></p>
+
+<!-- IMSx (or "Let's build a new server") -->
+<p> There is a very lengthy (30+ pages) text doc in <a href="file:///W:\Projects\DOR\HP-UX_Stuff\IMSx/IMSx_re-install.txt">file:///W:\Projects\DOR\HP-UX_Stuff\IMSx/IMSx_re-install.txt</a></p>
+
+<!-- Virtual Machines -->
+<a name="vm"></a>
+<h2> Virtual Machines</h2>
+per <a href ="http://blog.yannickjaquier.com/hpux/integrity-vm.html)">Integrity VMs</a>
+
+<h4>To check status</h4>
+sudo /opt/hpvm/bin/hpvmstatus
+
+<h4>To check Virtual Network</h4>
+<code>$ sudo /opt/hpvm/bin/hpvmnet -v</code>
+<pre>
+Version B.06.30.05
+Name                  Number State   Mode      NamePPA MAC Address    IPv4 Address
+===================== ====== ======= ========= ======= ============== ===============
+localnet                   1 Up      Shared            N/A            N/A            
+vswitch1                   3 Up      Shared    lan0    0x0017a4776010 192.168.162.11 
+</pre>
+
+vs. 
+
+<code>$ sudo /opt/hpvm/bin/hpvmnet -v </code> (on IMSDevQasVM)   
+<pre>                             
+Version B.04.10.00
+Name     Number State   Mode      NamePPA  MAC Address    IPv4 Address
+======== ====== ======= ========= ======== ============== ===============
+localnet      1 Up      Shared             N/A            N/A               
+vswitch1      2 Up      Shared    lan0     0x0017a4771004 192.168.163.12  
+</pre>
+
+<h4>To Create the Virtual Switch </h4>
+(per http://www.ericvb.com/archives/creating-an-hp-integrity-virtual-machine-on-hp-ux-11-31)
+and http://docstore.mik.ua/manuals/hp-ux/en/T2767-90141/rn01re13.html
+
+<p>For Management Nic:</p>
+<code>sudo /opt/hpvm/bin/hpvmnet -c -S vswitch1 -n 0</code> (-n 0 means lan0)
+<br>
+<code>sudo /opt/hpvm/bin/hpvmnet -b -S vswitch1</code>  (to start the vswitch)
+
+<br>
+<br>
+<p>For BaaS Nic:</p>
+<p>(The Virtual Switch IP address/NIC is the same as the Nic on the Host machine)</p>
+<p>(For how to add a NIC to HP-UX, go to <a href="hpux_config.html#network">Network Config</a>)</p>
+<br>
+<code>sudo /opt/hpvm/bin/hpvmnet -c -S vswitch2 -n 1</code>  (-n 1 means lan1)
+<br>
+<code>sudo /opt/hpvm/bin/hpvmnet -b -S vswitch2</code>  (to start the vswitch)
+
+<br>
+<h4>To Delete a virtual switch</h4>
+<code>sudo /opt/hpvm/bin/hpvmnet -h -S vswitch1</code>  (to stop the vswitch first)
+<br>
+<code>sudo /opt/hpvm/bin/hpvmnet -d -S vswitch1 -n 0</code>
+
+<br>
+ <code>/usr/bin/netstat -in</code>
+ <pre>
+Name      Mtu  Network         Address         Ipkts              Ierrs Opkts              Oerrs Coll
+lo0      32808 127.0.0.0       127.0.0.1       22080              0     22080              0     0   
+lan0      1500 192.168.162.0   192.168.162.11  159629             0     52784              0     0   
+</pre>
+
+<code>$ sudo /usr/sbin/lanscan</code>
+<pre>
+Hardware Station        Crd Hdw   Net-Interface  NM  MAC       HP-DLPI DLPI
+Path     Address        In# State NamePPA        ID  Type      Support Mjr#
+0/0/0/3/0/0/0 0x0017A4776010 0   UP    lan0 snap0     1   ETHER     Yes     119  (Nic 1)
+0/0/0/3/0/0/1 0x0017A4776012 1   UP    lan1 snap1     2   ETHER     Yes     119  (Nic 2)
+0/0/0/3/0/0/4 0x0017A4776018 2   UP    lan2 snap2     3   ETHER     Yes     119  
+0/0/0/3/0/0/5 0x0017A477601A 3   UP    lan3 snap3     4   ETHER     Yes     119
+0/0/0/4/0/0/0 0x0017A4776014 4   UP    lan4 snap4     5   ETHER     Yes     119  (Nic 3)
+0/0/0/4/0/0/1 0x0017A4776016 5   UP    lan5 snap5     6   ETHER     Yes     119  (Nic 4)
+LinkAgg0 0x000000000000 900 DOWN  lan900 snap900 8   ETHER     Yes     119
+LinkAgg1 0x000000000000 901 DOWN  lan901 snap901 9   ETHER     Yes     119
+LinkAgg2 0x000000000000 902 DOWN  lan902 snap902 10  ETHER     Yes     119
+LinkAgg3 0x000000000000 903 DOWN  lan903 snap903 11  ETHER     Yes     119
+LinkAgg4 0x000000000000 904 DOWN  lan904 snap904 12  ETHER     Yes     119
+</pre>
+
+<h4>To Create VM</h4>
+<p>This will be called imsqas, with 2 CPUS (-c), 16 GB RAM (-r), 1 network (-e), and 2 disks (-a). 
+<br>The 2 disks are logical volumes in a volume group on the host machine. 
+<br>The VM will see them as two physical disks.</p>
+<code>sudo /opt/hpvm/bin/hpvmcreate -Pimsqas -c2 -r16384 -e10 -a network:avio_lan::vswitch:vswitch1 -a disk:avio_stor::lv:/dev/VG_IMS_QAS/rlv_imsqas -a disk:avio_stor::lv:/dev/VG_IMS_QAS/rlv_imsqas_2</code>
+<br>
+<br>
+<code>sudo /opt/hpvm/bin/hpvmcreate -Pimsdevx -c2 -r10240 -e10 -a network:avio_lan::vswitch:vswitch1 -a disk:avio_stor::lv:/dev/VG_IMS_QAS_DEV/rlv_imsdev -a disk:avio_stor::lv:/dev/VG_IMS_QAS_DEV/rlv_imsdev_root</code>
+
+<h4>To Modify VM</h4>
+per <a href="http://uttamdravidam.blogspot.com/2012/06/hp-ux-virtual-machine-cheat-sheet.html">Modify HPVM</a>
+
+<h4>Automatically start VM on system boot</h4> 
+<p>(per <a href="https://thomasvogt.wordpress.com/category/hp-ux/">Autostart HPVM</a>)</p>
+<br>
+<code>sudo /opt/hpvm/bin/hpvmmodify -P imsqas -B auto</code>
+<br>
+<code>sudo /opt/hpvm/bin/hpvmmodify -P imsdevx -B auto</code>
+
+<br>
+<br>
+(need to add the BaaS nic to IMSQAS)
+<br>
+<code>sudo /opt/hpvm/bin/hpvmmodify -P imsqas -e10 -a network:avio_lan::vswitch:vswitch2</code>
+
+<p> To rename a virtual machine (after turning it off)</p>
+<p>(per <a href="http://docstore.mik.ua/manuals/hp-ux/en/T2767-90141/rn01re12.html"> )http://docstore.mik.ua/manuals/hp-ux/en/T2767-90141/rn01re12.html</a></p>
+<code>sudo /opt/hpvm/bin/hpvmmodify -P imsdev -N imsdevold</code>
+
+<h4>To check status </h4>
+<p>(because it bears repeating...)</p>
+<code>sudo /opt/hpvm/bin/hpvmstatus</code>
+
+<h4>To start VM</h4>
+<code>sudo /opt/hpvm/bin/hpvmstart -P imsqas</code>
+
+<h4>To start console view</h4> 
+<code>sudo /opt/hpvm/bin/hpvmconsole imsqas</code>
+<p> to exit console view:</p>
+<code>Press ctrl +b</code>
+
+<h4>Boot to EFI Shell</h4>
+<p>command to create dbprofile: (from <a href="http://community.hpe.com/t5/Ignite-UX/how-to-create-dbprofile/td-p/5552001">create dbprofile</a>)</p>
+
+<p>(for IMSQas)</p>
+<code>dbprofile -dn imsqas -sip 192.168.163.4 -cip 192.168.162.61 -gip 192.168.162.1 -m 255.255.255.192 -b "/opt/ignite/boot/nbp.efi"</code>
+<pre>
+description:                      
+
+Ignite-UX server IP address (-sip) 192.168.163.4
+Ignite client IP address (-cip) 192.168.162.61
+
+Ignite client  server Gateway IP address (-gip) 192.168.162.1
+Ignite client  server Network mask (-m) 255.255.255.192
+Boot file name (-b) /opt/ignite/boot/nbp.efi
+</pre>
+
+<h2>Starting our installation of HP-UX on a virtual machine</h2>
+<h4>Boot the server with using dbprofile</h4>
+
+
+<code>lanboot select -dn imsqas</code>
+<pre>
+Information needed for the install:
+IP of IMSQas is .162.61 (SM is .255.192)
+DNS is 204.89.74.180 and .18
+
+Logical volumes and sizes:
+/stand  2048
+/tmp  2048
+/home  2048
+/opt  10240
+/usr  10240
+/var  20480
+/var/adm/crash  8192
+</pre>
+
+<h4>To Remove the VM</h4>
+<p>(where the vm name is "imsqas")</p>
+<code>sudo /opt/hpvm/bin/hpvmremove -Pimsqas</code>
+
+<h4>To delete LV</h4>
+<a href="http://lvm-hpux-11iv3.blogspot.com/2011/10/deleting-file-system-removing-lv.html">Remove Logical Volume</a>
+
+<br>
+<br>
+<a href="#toc">Back to TOC</a>
+
+</body>
+</html>

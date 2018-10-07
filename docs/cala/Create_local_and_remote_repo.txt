@@ -1,0 +1,70 @@
+Last login: Wed Aug 20 14:14:50 on ttys000
+222scala:~ bvagnini$ cd Projects
+222scala:Projects bvagnini$ ls -a
+.						Schedule
+..						assessment-old
+.DS_Store					assessment_feedback
+Accountability					bkv-learning
+Assessment					cala-fsu.github.com
+CALA Web Development Work Flow (revised 011614)	cat_all_items.sh
+CALALearn					copy for Mike
+EOC						copy of cala-fsu.github.com
+FCATWorkLog.xlsx				demo
+FCAT_Spec_Doc_TOC-standalone_page.xlsx		ebooks
+FCAT_Spec_Doc_TOC.pdf				intranet
+FCAT_Starting points by task.txt		misc FCAT files
+Git Server Setup.txt				old_cala_site
+PHP-XML version -cala-intranet			replace.rb
+Recordings
+222scala:Projects bvagnini$ mkdir CBL
+222scala:Projects bvagnini$ cd CBL
+222scala:CBL bvagnini$ ls -a
+.	..
+222scala:CBL bvagnini$ git init
+Initialized empty Git repository in /Users/bvagnini/Projects/CBL/.git/
+222scala:CBL bvagnini$ git status
+On branch master
+
+Initial commit
+
+nothing to commit (create/copy files and use "git add" to track)
+222scala:CBL bvagnini$ touch test.txt
+222scala:CBL bvagnini$ ls -a
+.		..		.git		test.txt
+222scala:CBL bvagnini$ git status
+On branch master
+
+Initial commit
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+
+	test.txt
+
+nothing added to commit but untracked files present (use "git add" to track)
+222scala:CBL bvagnini$ git add .
+222scala:CBL bvagnini$ git commit - m "Initial commit with test file."
+error: pathspec '-' did not match any file(s) known to git.
+error: pathspec 'm' did not match any file(s) known to git.
+error: pathspec 'Initial commit with test file.' did not match any file(s) known to git.
+222scala:CBL bvagnini$ git commit -m "Initial commit with test file."
+[master (root-commit) 1e8e9b2] Initial commit with test file.
+ 1 file changed, 0 insertions(+), 0 deletions(-)
+ create mode 100644 test.txt
+222scala:CBL bvagnini$ git remote add origin git@catkin:/home/git/CBL.git
+222scala:CBL bvagnini$ git remote
+origin
+222scala:CBL bvagnini$ git push origin master
+fatal: '/home/git/CBL.git' does not appear to be a git repository
+fatal: Could not read from remote repository.
+
+Please make sure you have the correct access rights
+and the repository exists.
+222scala:CBL bvagnini$ git push origin master
+Counting objects: 3, done.
+Writing objects: 100% (3/3), 220 bytes | 0 bytes/s, done.
+Total 3 (delta 0), reused 0 (delta 0)
+To git@catkin:/home/git/CBL.git
+ * [new branch]      master -> master
+222scala:CBL bvagnini$ gitk --all
+222scala:CBL bvagnini$ 

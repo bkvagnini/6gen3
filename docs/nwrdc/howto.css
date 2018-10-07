@@ -1,0 +1,13 @@
+.os{
+	color:red;
+	font-weight: bold;
+}
+code {
+	font-style: italic;
+	margin-left:2em;
+}
+pre {
+	   border: 1px solid blue;
+    box-sizing: border-box;
+	padding: 2em
+}
